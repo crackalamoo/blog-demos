@@ -140,6 +140,14 @@ def display_clusters_overview(kmeans):
     for i, w in enumerate(least_isolated_words[:10]):
         print(i+1, w)
 
+def display_covariance():
+    X = np.array([embeddings[w] for w in embeddings]).T # rows are variables, columns are observations
+    cov = np.cov(X)
+    cov *= (1 - np.eye(cov.shape[0]))
+    plt.imshow(cov, cmap='hot', interpolation='nearest')
+    plt.colorbar()
+    plt.show()
+
 
 def plot_pca(pca_vecs, plot_3d=False, kmeans=None):
     words = [w for w in embeddings]
@@ -208,3 +216,12 @@ if __name__ == '__main__':
     display_cluster(kmeans, 'genghis')
 
     display_clusters_overview(kmeans)
+
+    display_covariance()
+
+    e9 = np.zeros_like(zero_vec)
+    e9[9] = 1
+    e276 = np.zeros_like(zero_vec)
+    e276[276] = 1
+    display_sims(to_e=e9, metric=cos_sim, label='e9', reverse=True)
+    display_sims(to_e=e276, metric=cos_sim, label='e276', reverse=True)
