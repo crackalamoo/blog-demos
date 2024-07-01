@@ -110,6 +110,37 @@ def display_cluster(kmeans, word):
     for i, w in enumerate(farthest_words[:5]):
         print(i+1, w)
 
+def display_clusters_overview(kmeans):
+    X = np.array([embeddings[w] for w in embeddings])
+    y = kmeans.predict(X)
+    unique, counts = np.unique(y, return_counts=True)
+    biggest = unique[np.argmax(counts)]
+    smallest = unique[np.argmin(counts)]
+    _, biggest_words = get_kmeans_cluster(kmeans, cluster=biggest)
+    print("OVERVIEW OF CLUSTERS")
+    print(f"Biggest cluster: {biggest} ({len(biggest_words)} words)")
+    for i, w in enumerate(biggest_words[:10]):
+        print(i+1, w)
+    _, smallest_words = get_kmeans_cluster(kmeans, cluster=smallest)
+    print(f"Smallest cluster: {smallest} ({len(smallest_words)} words)")
+    for i, w in enumerate(smallest_words[:10]):
+        print(i+1, w)
+    distances = np.zeros(kmeans.cluster_centers_.shape[0])
+    for i in range(distances.shape[0]):
+        other_centers = np.concatenate([kmeans.cluster_centers_[:i], kmeans.cluster_centers_[i+1:]], axis=0)
+        distances[i] = np.mean(np.sum(np.square(other_centers - kmeans.cluster_centers_[i]), axis=1))
+    most_isolated = np.argmax(distances)
+    _, most_isolated_words = get_kmeans_cluster(kmeans, cluster=most_isolated)
+    print(f"Most isolated cluster: {most_isolated}")
+    for i, w in enumerate(most_isolated_words[:10]):
+        print(i+1, w)
+    least_isolated = np.argmin(distances)
+    _, least_isolated_words = get_kmeans_cluster(kmeans, cluster=least_isolated)
+    print(f"Least isolated cluster: {least_isolated}")
+    for i, w in enumerate(least_isolated_words[:10]):
+        print(i+1, w)
+
+
 def plot_pca(pca_vecs, plot_3d=False, kmeans=None):
     words = [w for w in embeddings]
     x_vec = pca_vecs[0]
@@ -173,3 +204,7 @@ if __name__ == '__main__':
     display_cluster(kmeans, 'outbreak')
     display_cluster(kmeans, 'animal')
     display_cluster(kmeans, 'illinois')
+    # display_cluster(kmeans, 'maxwell')
+    display_cluster(kmeans, 'genghis')
+
+    display_clusters_overview(kmeans)
