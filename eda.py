@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
 embeddings = {}
 
@@ -49,6 +50,7 @@ def display_sims(to_word=None, to_e=None, n=10, metric=cos_sim, reverse=False, l
         sims.reverse()
     for i, sim in enumerate(reversed(sims[-n:])):
         print(i+1, display(sim))
+    return sims
 
 
 def get_pca_vecs(n=10):
@@ -58,6 +60,15 @@ def get_pca_vecs(n=10):
     principal_components = list(pca.components_[:n, :])
     return principal_components
 
+def get_kmeans_centers(n=600):
+    kmeans = KMeans(n_clusters=n, n_init=1)
+    X = np.array([embeddings[w] for w in embeddings])
+    kmeans.fit(X)
+    print(kmeans.n_iter_)
+    centers = list(kmeans.cluster_centers_)
+    centers.sort(key=lambda v: np.sum(np.square(v)), reverse=True)
+    centers = centers[:-100]
+    return centers
 
 if __name__ == '__main__':
     display_sims(to_word='cat')
@@ -73,8 +84,8 @@ if __name__ == '__main__':
     display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['france'], metric=euc_sim, n=15)
 
     zero_vec = np.zeros_like(embeddings['the'])
-    display_sims(to_e=zero_vec, metric=euc_sim, reverse=True)
-    display_sims(to_e=zero_vec, metric=euc_sim)
+    display_sims(to_e=zero_vec, metric=euc_sim, reverse=True, label='largest magnitude')
+    display_sims(to_e=zero_vec, metric=euc_sim, label='smallest magnitude')
 
     gender_pairs = [('man', 'woman'), ('men', 'women'), ('brother', 'sister'), ('father', 'mother'),
                     ('uncle', 'aunt'), ('grandfather', 'grandmother'), ('boy', 'girl'),
@@ -91,3 +102,7 @@ if __name__ == '__main__':
     for i, vec in enumerate(pca_vecs):
         display_sims(to_e=vec, metric=cos_sim, label=f'PCA {i+1}')
         display_sims(to_e=vec, metric=cos_sim, label=f'PCA {i+1} negative', reverse=True)
+    
+    cluster_centers = get_kmeans_centers()
+    for i, vec in enumerate(cluster_centers):
+        display_sims(to_e=vec, metric=euc_sim, label=f'KMeans {i+1}')
