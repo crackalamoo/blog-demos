@@ -144,7 +144,8 @@ def display_covariance():
     X = np.array([embeddings[w] for w in embeddings]).T # rows are variables, columns are observations
     cov = np.cov(X)
     cov *= (1 - np.eye(cov.shape[0]))
-    plt.imshow(cov, cmap='hot', interpolation='nearest')
+    cov_range = np.maximum(np.max(cov), np.abs(np.min(cov)))
+    plt.imshow(cov, cmap='bwr', interpolation='nearest', vmin=-cov_range, vmax=cov_range)
     plt.colorbar()
     plt.show()
 
@@ -220,8 +221,8 @@ if __name__ == '__main__':
     display_covariance()
 
     e9 = np.zeros_like(zero_vec)
-    e9[9] = 1
+    e9[9] = 1.0
     e276 = np.zeros_like(zero_vec)
-    e276[276] = 1
+    e276[276] = 1.0
     display_sims(to_e=e9, metric=cos_sim, label='e9', reverse=True)
     display_sims(to_e=e276, metric=cos_sim, label='e276', reverse=True)
