@@ -24,7 +24,7 @@ with open(f"glove/glove.6B.{NDIM}d.txt", "r") as f:
 print(len(embeddings))
 
 cos_sim = lambda a,b: np.dot(a,b)/(np.linalg.norm(a) * np.linalg.norm(b))
-euc_sim = lambda a,b: -np.sum(np.square(a - b))
+euc_dist = lambda a,b: np.sum(np.square(a - b))
 
 def get_sims(to_word=None, to_e=None, metric=cos_sim):
     assert (to_word is not None) ^ (to_e is not None)
@@ -64,15 +64,51 @@ def get_pca_vecs(n=10):
     principal_components = list(pca.components_[:n, :])
     return pca, principal_components
 
-def get_kmeans_centers(n=600):
+def get_kmeans_centers(n=300):
     kmeans = KMeans(n_clusters=n, n_init=1)
     X = np.array([embeddings[w] for w in embeddings])
     kmeans.fit(X)
-    print(kmeans.n_iter_)
     centers = list(kmeans.cluster_centers_)
     centers.sort(key=lambda v: np.sum(np.square(v)), reverse=True)
-    centers = centers[:-100]
     return kmeans, centers
+
+def display_kmeans(kmeans):
+    words = np.array([w for w in embeddings])
+    X = np.array([embeddings[w] for w in embeddings])
+    y = kmeans.predict(X)
+    for cluster in range(kmeans.cluster_centers_.shape[0]):
+        print(f'KMeans {cluster}')
+        cluster_words = words[y == cluster]
+        for i, w in enumerate(cluster_words[:5]):
+            print(i+1, w)
+
+def get_kmeans_cluster(kmeans, word=None, cluster=None):
+    assert (word is None) ^ (cluster is None)
+    if cluster is None:
+        cluster = kmeans.predict([embeddings[word]])[0]
+    words = np.array([w for w in embeddings])
+    X = np.array([embeddings[w] for w in embeddings])
+    y = kmeans.predict(X)
+    cluster_words = words[y == cluster]
+    return cluster, cluster_words
+
+def display_cluster(kmeans, word):
+    cluster, cluster_words = get_kmeans_cluster(kmeans, word=word)
+    print(f"Full KMeans ({word}, cluster {cluster})")
+    for i, w in enumerate(cluster_words):
+        print(i+1, w)
+    distances = np.concatenate([kmeans.cluster_centers_[:cluster], kmeans.cluster_centers_[cluster+1:]], axis=0)
+    distances = np.sum(np.square(distances - kmeans.cluster_centers_[cluster]), axis=1)
+    nearest = np.argmin(distances, axis=0)
+    _, nearest_words = get_kmeans_cluster(kmeans, cluster=nearest)
+    print(f"Nearest cluster: {nearest}")
+    for i, w in enumerate(nearest_words[:5]):
+        print(i+1, w)
+    farthest = np.argmax(distances, axis=0)
+    print(f"Farthest cluster: {farthest}")
+    _, farthest_words = get_kmeans_cluster(kmeans, cluster=farthest)
+    for i, w in enumerate(farthest_words[:5]):
+        print(i+1, w)
 
 def plot_pca(pca_vecs, plot_3d=False, kmeans=None):
     words = [w for w in embeddings]
@@ -102,14 +138,14 @@ if __name__ == '__main__':
     display_sims(to_word='speak')
     display_sims(to_word='happy')
 
-    display_sims(to_e = embeddings['aunt'] - embeddings['woman'] + embeddings['man'], metric=euc_sim, n=15)
-    display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['germany'], metric=euc_sim, n=15)
-    display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['india'], metric=euc_sim, n=15)
-    display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['france'], metric=euc_sim, n=15)
+    display_sims(to_e = embeddings['aunt'] - embeddings['woman'] + embeddings['man'], metric=euc_dist, n=15, reverse=True)
+    display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['germany'], metric=euc_dist, n=15, reverse=True)
+    display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['india'], metric=euc_dist, n=15, reverse=True)
+    display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['france'], metric=euc_dist, n=15, reverse=True)
 
     zero_vec = np.zeros_like(embeddings['the'])
-    display_sims(to_e=zero_vec, metric=euc_sim, reverse=True, label='largest magnitude')
-    display_sims(to_e=zero_vec, metric=euc_sim, label='smallest magnitude')
+    display_sims(to_e=zero_vec, metric=euc_dist, label='largest magnitude')
+    display_sims(to_e=zero_vec, metric=euc_dist, reverse=True, label='smallest magnitude')
 
     gender_pairs = [('man', 'woman'), ('men', 'women'), ('brother', 'sister'), ('father', 'mother'),
                     ('uncle', 'aunt'), ('grandfather', 'grandmother'), ('boy', 'girl'),
@@ -130,7 +166,10 @@ if __name__ == '__main__':
     # plot_pca(pca_vecs)
     
     kmeans, cluster_centers = get_kmeans_centers()
-    for i, vec in enumerate(cluster_centers):
-        display_sims(to_e=vec, metric=euc_sim, label=f'KMeans {i+1}')
+    display_kmeans(kmeans)
     
     plot_pca(pca_vecs, kmeans=kmeans)
+
+    display_cluster(kmeans, 'outbreak')
+    display_cluster(kmeans, 'animal')
+    display_cluster(kmeans, 'illinois')
