@@ -1,10 +1,14 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
+# NDIM = 50
+NDIM = 300
+
 embeddings = {}
 
-with open("glove/glove.6B.300d.txt", "r") as f:
+with open(f"glove/glove.6B.{NDIM}d.txt", "r") as f:
     glove_content = f.read().split('\n')
     f.close()
 
@@ -58,7 +62,7 @@ def get_pca_vecs(n=10):
     X = np.array([embeddings[w] for w in embeddings])
     pca.fit(X)
     principal_components = list(pca.components_[:n, :])
-    return principal_components
+    return pca, principal_components
 
 def get_kmeans_centers(n=600):
     kmeans = KMeans(n_clusters=n, n_init=1)
@@ -68,7 +72,27 @@ def get_kmeans_centers(n=600):
     centers = list(kmeans.cluster_centers_)
     centers.sort(key=lambda v: np.sum(np.square(v)), reverse=True)
     centers = centers[:-100]
-    return centers
+    return kmeans, centers
+
+def plot_pca(pca_vecs, plot_3d=False, kmeans=None):
+    words = [w for w in embeddings]
+    x_vec = pca_vecs[0]
+    y_vec = pca_vecs[1]
+    X = np.array([np.dot(x_vec, embeddings[w]) for w in words])
+    Y = np.array([np.dot(y_vec, embeddings[w]) for w in words])
+    colors =  kmeans.predict([embeddings[w] for w in words])
+    if plot_3d:
+        z_vec = pca_vecs[2]
+        Z = np.array([np.dot(z_vec, embeddings[w]) for w in words])
+        ax = plt.subplot(projection='3d')
+        ax.scatter(X, Y, Z, c=colors)
+        for i in np.random.choice(len(words), size=100, replace=False):
+            ax.text(X[i], Y[i], Z[i], words[i])
+    else:
+        plt.scatter(X, Y, c=colors)
+        for i in np.random.choice(len(words), size=500, replace=False):
+            plt.annotate(words[i], (X[i], Y[i]))
+    plt.show()
 
 if __name__ == '__main__':
     display_sims(to_word='cat')
@@ -98,11 +122,15 @@ if __name__ == '__main__':
     display_sims(to_e=masc_v, metric=cos_sim, label='masculine vecs')
     display_sims(to_e=masc_v, metric=cos_sim, reverse=True, label='feminine vecs')
 
-    pca_vecs = get_pca_vecs()
+    pca, pca_vecs = get_pca_vecs()
     for i, vec in enumerate(pca_vecs):
         display_sims(to_e=vec, metric=cos_sim, label=f'PCA {i+1}')
         display_sims(to_e=vec, metric=cos_sim, label=f'PCA {i+1} negative', reverse=True)
     
-    cluster_centers = get_kmeans_centers()
+    # plot_pca(pca_vecs)
+    
+    kmeans, cluster_centers = get_kmeans_centers()
     for i, vec in enumerate(cluster_centers):
         display_sims(to_e=vec, metric=euc_sim, label=f'KMeans {i+1}')
+    
+    plot_pca(pca_vecs, kmeans=kmeans)
