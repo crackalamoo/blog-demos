@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 glove/*
+glove.6B/*

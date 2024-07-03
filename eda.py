@@ -8,18 +8,17 @@ NDIM = 300
 
 embeddings = {}
 
-with open(f"glove/glove.6B.{NDIM}d.txt", "r") as f:
+with open(f"glove.6B/glove.6B.{NDIM}d.txt", "r") as f:
     glove_content = f.read().split('\n')
-    f.close()
 
-    for i in range(len(glove_content)//10):
-        line = glove_content[i].strip().split(' ')
-        assert len(line) != 0
-        if line[0] == '':
-            continue
-        word = line[0]
-        embedding = np.array(list(map(float, line[1:])))
-        embeddings[word] = embedding
+for i in range(len(glove_content)//10):
+    line = glove_content[i].strip().split(' ')
+    assert len(line) != 0
+    if line[0] == '':
+        continue
+    word = line[0]
+    embedding = np.array(list(map(float, line[1:])))
+    embeddings[word] = embedding
 
 print(len(embeddings))
 
@@ -45,16 +44,12 @@ def display_sims(to_word=None, to_e=None, n=10, metric=cos_sim, reverse=False, l
     sims = get_sims(to_word=to_word, to_e=to_e, metric=metric)
     display = lambda sim: f'{sim[1]}: {sim[0]:.5f}'
     if label is None:
-        if to_word is not None:
-            label = to_word.upper()
-        else:
-            label = ''
+        label = to_word.upper() if to_word is not None else ''
     print(label)
     if reverse:
         sims.reverse()
     for i, sim in enumerate(reversed(sims[-n:])):
         print(i+1, display(sim))
-    return sims
 
 
 def get_pca_vecs(n=10):
@@ -161,13 +156,20 @@ def plot_pca(pca_vecs, plot_3d=False, kmeans=None):
         z_vec = pca_vecs[2]
         Z = np.array([np.dot(z_vec, embeddings[w]) for w in words])
         ax = plt.subplot(projection='3d')
-        ax.scatter(X, Y, Z, c=colors)
+        ax.scatter(X, Y, Z, c=colors, cmap='plasma')
         for i in np.random.choice(len(words), size=100, replace=False):
             ax.text(X[i], Y[i], Z[i], words[i])
     else:
-        plt.scatter(X, Y, c=colors)
-        for i in np.random.choice(len(words), size=500, replace=False):
-            plt.annotate(words[i], (X[i], Y[i]))
+        plt.scatter(X, Y, c=colors, cmap='spring')
+        for i in np.random.choice(len(words), size=100, replace=False):
+            plt.annotate(words[i], (X[i], Y[i]), weight='bold')
+    plt.show()
+
+def plot_magnitudes():
+    words = [w for w in embeddings]
+    magnitude = lambda word: np.linalg.norm(embeddings[word])
+    magnitudes = list(map(magnitude, words))
+    plt.hist(magnitudes, bins=20)
     plt.show()
 
 if __name__ == '__main__':
@@ -177,8 +179,10 @@ if __name__ == '__main__':
     display_sims(to_word='share')
     display_sims(to_word='speak')
     display_sims(to_word='happy')
+    display_sims(to_word='queen')
 
-    display_sims(to_e = embeddings['aunt'] - embeddings['woman'] + embeddings['man'], metric=euc_dist, n=15, reverse=True)
+    display_sims(to_e = embeddings['man'] - embeddings['woman'] + embeddings['queen'], metric=cos_sim, n=15, reverse=False, label='king - queen')
+    display_sims(to_e = embeddings['aunt'] - embeddings['woman'] + embeddings['man'], metric=cos_sim, n=15, reverse=False, label='aunt - uncle')
     display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['germany'], metric=euc_dist, n=15, reverse=True)
     display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['india'], metric=euc_dist, n=15, reverse=True)
     display_sims(to_e = embeddings['sushi'] - embeddings['japan'] + embeddings['france'], metric=euc_dist, n=15, reverse=True)
@@ -186,6 +190,8 @@ if __name__ == '__main__':
     zero_vec = np.zeros_like(embeddings['the'])
     display_sims(to_e=zero_vec, metric=euc_dist, label='largest magnitude')
     display_sims(to_e=zero_vec, metric=euc_dist, reverse=True, label='smallest magnitude')
+    
+    plot_magnitudes()
 
     gender_pairs = [('man', 'woman'), ('men', 'women'), ('brother', 'sister'), ('father', 'mother'),
                     ('uncle', 'aunt'), ('grandfather', 'grandmother'), ('boy', 'girl'),
