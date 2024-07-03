@@ -59,13 +59,11 @@ def get_pca_vecs(n=10):
     principal_components = list(pca.components_[:n, :])
     return pca, principal_components
 
-def get_kmeans_centers(n=300):
+def get_kmeans(n=300):
     kmeans = KMeans(n_clusters=n, n_init=1)
     X = np.array([embeddings[w] for w in embeddings])
     kmeans.fit(X)
-    centers = list(kmeans.cluster_centers_)
-    centers.sort(key=lambda v: np.sum(np.square(v)), reverse=True)
-    return kmeans, centers
+    return kmeans
 
 def display_kmeans(kmeans):
     words = np.array([w for w in embeddings])
@@ -169,7 +167,7 @@ def plot_magnitudes():
     words = [w for w in embeddings]
     magnitude = lambda word: np.linalg.norm(embeddings[word])
     magnitudes = list(map(magnitude, words))
-    plt.hist(magnitudes, bins=20)
+    plt.hist(magnitudes, bins=40)
     plt.show()
 
 if __name__ == '__main__':
@@ -191,18 +189,21 @@ if __name__ == '__main__':
     display_sims(to_e=zero_vec, metric=euc_dist, label='largest magnitude')
     display_sims(to_e=zero_vec, metric=euc_dist, reverse=True, label='smallest magnitude')
     
-    plot_magnitudes()
+    # plot_magnitudes()
 
-    gender_pairs = [('man', 'woman'), ('men', 'women'), ('brother', 'sister'), ('father', 'mother'),
+    gender_pairs = [('man', 'woman'), ('men', 'women'), ('brother', 'sister'), ('he', 'she'),
                     ('uncle', 'aunt'), ('grandfather', 'grandmother'), ('boy', 'girl'),
                     ('son', 'daughter')]
     masc_v = zero_vec
     for pair in gender_pairs:
         masc_v += embeddings[pair[0]]
         masc_v -= embeddings[pair[1]]
+    masc_v /= len(gender_pairs)
 
     display_sims(to_e=masc_v, metric=cos_sim, label='masculine vecs')
     display_sims(to_e=masc_v, metric=cos_sim, reverse=True, label='feminine vecs')
+    print("nurse - man", cos_sim(embeddings['nurse'], embeddings['man']))
+    print("nurse - woman", cos_sim(embeddings['nurse'], embeddings['woman']))
 
     pca, pca_vecs = get_pca_vecs()
     for i, vec in enumerate(pca_vecs):
@@ -211,7 +212,7 @@ if __name__ == '__main__':
     
     # plot_pca(pca_vecs)
     
-    kmeans, cluster_centers = get_kmeans_centers()
+    kmeans = get_kmeans()
     display_kmeans(kmeans)
     
     plot_pca(pca_vecs, kmeans=kmeans)
