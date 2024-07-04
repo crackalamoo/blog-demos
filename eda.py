@@ -136,14 +136,13 @@ def display_clusters_overview(kmeans):
 def display_covariance():
     X = np.array([embeddings[w] for w in embeddings]).T # rows are variables, columns are observations
     cov = np.cov(X)
-    cov *= (1 - np.eye(cov.shape[0]))
     cov_range = np.maximum(np.max(cov), np.abs(np.min(cov)))
     plt.imshow(cov, cmap='bwr', interpolation='nearest', vmin=-cov_range, vmax=cov_range)
     plt.colorbar()
     plt.show()
 
 
-def plot_pca(pca_vecs, plot_3d=False, kmeans=None):
+def plot_pca(pca_vecs, kmeans, plot_3d=False):
     words = [w for w in embeddings]
     x_vec = pca_vecs[0]
     y_vec = pca_vecs[1]
@@ -189,7 +188,7 @@ if __name__ == '__main__':
     display_sims(to_e=zero_vec, metric=euc_dist, label='largest magnitude')
     display_sims(to_e=zero_vec, metric=euc_dist, reverse=True, label='smallest magnitude')
     
-    # plot_magnitudes()
+    plot_magnitudes()
 
     gender_pairs = [('man', 'woman'), ('men', 'women'), ('brother', 'sister'), ('he', 'she'),
                     ('uncle', 'aunt'), ('grandfather', 'grandmother'), ('boy', 'girl'),
@@ -210,17 +209,15 @@ if __name__ == '__main__':
         display_sims(to_e=vec, metric=cos_sim, label=f'PCA {i+1}')
         display_sims(to_e=vec, metric=cos_sim, label=f'PCA {i+1} negative', reverse=True)
     
-    # plot_pca(pca_vecs)
-    
     kmeans = get_kmeans()
     display_kmeans(kmeans)
     
-    plot_pca(pca_vecs, kmeans=kmeans)
+    plot_pca(pca_vecs, kmeans)
 
     display_cluster(kmeans, 'outbreak')
     display_cluster(kmeans, 'animal')
     display_cluster(kmeans, 'illinois')
-    # display_cluster(kmeans, 'maxwell')
+    display_cluster(kmeans, 'maxwell')
     display_cluster(kmeans, 'genghis')
 
     display_clusters_overview(kmeans)
