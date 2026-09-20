@@ -11,6 +11,11 @@
 
 const BASE = location.pathname.replace(/[^/]*$/, '');
 
+/* ?layout=panel drops the viewer and stacks the readouts into one tall
+ * column, for compositing beside a real Minecraft client's video. */
+const PANEL = new URLSearchParams(location.search).get('layout') === 'panel';
+const PANEL_ACTIONS = 6;
+
 const el = {
   viewer: document.getElementById('viewer'),
   state: document.getElementById('state'),
@@ -26,6 +31,11 @@ const el = {
   actionCount: document.getElementById('action-count'),
   usage: document.getElementById('usage'),
 };
+
+if (PANEL) {
+  document.documentElement.dataset.layout = 'panel';
+  el.viewer.remove();
+}
 
 function pct(p) {
   if (p >= 0.995) return '100%';
@@ -66,7 +76,11 @@ function renderActions(actions, chosen, probabilities) {
   const ranked = actions.slice().sort(
     (a, b) => probabilities[b.label] - probabilities[a.label]);
   const top = probabilities[ranked[0].label] || 1;
-  for (const action of ranked) {
+  const shown = PANEL ? ranked.slice(0, PANEL_ACTIONS) : ranked;
+  if (PANEL && !shown.some((a) => a.label === chosen)) {
+    shown.push(ranked.find((a) => a.label === chosen));
+  }
+  for (const action of shown) {
     const p = probabilities[action.label];
     const row = document.createElement('li');
     row.className = 'action' + (action.label === chosen ? ' chosen' : '');
@@ -101,6 +115,15 @@ function renderActions(actions, chosen, probabilities) {
 
     el.actions.appendChild(row);
   }
+
+  const hidden = ranked.filter((a) => !shown.includes(a));
+  if (hidden.length) {
+    const rest = document.createElement('li');
+    rest.className = 'more';
+    rest.textContent = hidden.length + ' more legal actions, none above '
+      + pct(probabilities[hidden[0].label]);
+    el.actions.appendChild(rest);
+  }
 }
 
 function renderVerdict(decision) {
@@ -114,6 +137,7 @@ function renderVerdict(decision) {
 }
 
 function showViewer(reported) {
+  if (PANEL) return;
   // The bot names itself 127.0.0.1, which is the wrong machine whenever the
   // page is open from anywhere but the host.
   const parsed = new URL(reported);
@@ -139,6 +163,7 @@ function renderMilestone(milestone) {
   at.textContent = ' \u00b7 ' + milestone.decision;
   row.appendChild(at);
   el.milestones.appendChild(row);
+  el.milestones.scrollTop = el.milestones.scrollHeight;
 }
 
 const source = new EventSource(BASE + 'api/stream');

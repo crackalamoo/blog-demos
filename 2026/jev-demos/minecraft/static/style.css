@@ -298,3 +298,96 @@ main {
   display: none;
 }
 .objective .note.on { display: block; }
+
+/* ------------------------------------------------------- panel layout */
+
+/* ?layout=panel: no viewer, one column, read from a video composite. */
+
+html[data-layout="panel"] main {
+  background: var(--panel);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+html[data-layout="panel"] .world,
+html[data-layout="panel"] .side { display: contents; }
+
+html[data-layout="panel"] .rail {
+  position: static;
+  align-items: flex-start;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--line);
+  background: #07090b;
+  font-size: 12.5px;
+}
+
+html[data-layout="panel"] .milestone { white-space: normal; }
+
+html[data-layout="panel"] .milestones {
+  max-height: 4.4em;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+html[data-layout="panel"] .milestones::-webkit-scrollbar { width: 0; }
+
+html[data-layout="panel"] .objective { padding: 20px 22px 18px; }
+
+html[data-layout="panel"] .objective .head,
+html[data-layout="panel"] .choice .head { font-size: 11px; }
+
+html[data-layout="panel"] .objective .text { font-size: 17px; }
+
+html[data-layout="panel"] .objective .note { font-size: 13.5px; }
+
+html[data-layout="panel"] .objective .foot,
+html[data-layout="panel"] .counts { font-size: 11.5px; }
+
+html[data-layout="panel"] .state {
+  max-height: 20vh;
+  padding: 16px 22px;
+  font-size: 12.5px;
+}
+
+html[data-layout="panel"] .choice { max-height: none; }
+
+html[data-layout="panel"] .choice .head,
+html[data-layout="panel"] .meters { padding-left: 22px; padding-right: 22px; }
+
+html[data-layout="panel"] .counts { flex-wrap: wrap; }
+
+html[data-layout="panel"] .meter { font-size: 12px; }
+
+html[data-layout="panel"] .actions { padding: 12px 22px 20px; }
+
+html[data-layout="panel"] .action {
+  grid-template-columns: 50px 80px minmax(0, 1fr);
+  padding: 9px 0;
+}
+
+html[data-layout="panel"] .action .value { font-size: 13.5px; }
+
+html[data-layout="panel"] .action .label { font-size: 14px; }
+
+html[data-layout="panel"] .action .why { font-size: 12.5px; }
+
+html[data-layout="panel"] .more {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font: 12px/1.4 var(--mono);
+  color: var(--ink-faint);
+}
+
+/* Filmed fullscreen and cropped to the column, so the column keeps its
+ * own width on a wide screen instead of stretching to fill it. */
+@media (min-width: 700px) {
+  html[data-layout="panel"] body { background: #000; }
+  html[data-layout="panel"] main {
+    width: 640px;
+    margin: 0 auto;
+  }
+}
