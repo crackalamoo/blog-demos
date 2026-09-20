@@ -8,8 +8,15 @@
 </head>
 <body>
 <header>
-  <input id="query" class="query" spellcheck="false" autocomplete="off"
-         placeholder="Search by meaning" autofocus>
+  <div class="bar">
+    <input id="query" class="query" spellcheck="false" autocomplete="off"
+           placeholder="Search by meaning" autofocus>
+    <span id="count" class="count">0 / 0</span>
+    <button id="prev" class="step" type="button"
+            title="Previous match" aria-label="Previous match">&#8593;</button>
+    <button id="next" class="step" type="button"
+            title="Next match" aria-label="Next match">&#8595;</button>
+  </div>
 </header>
 
 <main id="story" class="story"></main>

@@ -21,10 +21,15 @@ const MIN_OPACITY = 0.085;   // receded, but the shape of the text remains
 const STEEP = 12;
 const MIDPOINT = 0.5;
 
+const HIT = 0.5;             // at or above this, the paragraph is a match
+
 const el = {
   header: document.querySelector('header'),
   query: document.getElementById('query'),
   story: document.getElementById('story'),
+  count: document.getElementById('count'),
+  prev: document.getElementById('prev'),
+  next: document.getElementById('next'),
 };
 
 const state = {
@@ -32,6 +37,8 @@ const state = {
   paragraphs: [],
   asked: '',
   debounce: 0,
+  hits: [],
+  current: -1,       // a paragraph index, not a place in `hits`
 };
 
 function weight(p) {
@@ -40,16 +47,58 @@ function weight(p) {
   return (s(p) - lo) / (s(1) - lo);
 }
 
-function apply(node, p) {
+function apply(index, p) {
+  const node = state.paragraphs[index];
   const w = weight(p);
   node.style.setProperty('--o', (MIN_OPACITY + (1 - MIN_OPACITY) * w)
     .toFixed(3));
+  node.classList.toggle('hit', p >= HIT);
+  if (p >= HIT) insert(index);
+}
+
+/* The hit list stays in story order however the verdicts arrive, and the
+ * current hit is held by paragraph index so that a hit landing above it only
+ * moves its number in the counter, never the reader's place. */
+function insert(index) {
+  let at = 0;
+  while (at < state.hits.length && state.hits[at] < index) at++;
+  if (state.hits[at] === index) return;
+  state.hits.splice(at, 0, index);
+  count();
+}
+
+function count() {
+  const at = state.hits.indexOf(state.current);
+  el.count.textContent = `${at + 1} / ${state.hits.length}`;
+}
+
+function step(delta) {
+  if (!state.hits.length) return;
+  const at = state.hits.indexOf(state.current);
+  const n = state.hits.length;
+  const to = at < 0 ? (delta > 0 ? 0 : n - 1) : (at + delta + n) % n;
+  mark(state.hits[to]);
+}
+
+function mark(index) {
+  const node = state.paragraphs[index];
+  if (!node) throw new Error(`no paragraph ${index}`);
+  const was = state.paragraphs[state.current];
+  if (was) was.classList.remove('current');
+  node.classList.add('current');
+  state.current = index;
+  node.scrollIntoView({behavior: 'smooth', block: 'center'});
+  count();
 }
 
 function reset() {
   for (const node of state.paragraphs) {
     node.style.removeProperty('--o');
+    node.classList.remove('hit', 'current');
   }
+  state.hits = [];
+  state.current = -1;
+  count();
   const failed = el.story.querySelector('.failed');
   if (failed) failed.remove();
 }
@@ -83,7 +132,7 @@ function sweep() {
 
   source.addEventListener('judged', (ev) => {
     const d = JSON.parse(ev.data);
-    apply(state.paragraphs[d.i], d.p);
+    apply(d.i, d.p);
   });
 
   source.addEventListener('done', () => stop());
@@ -103,10 +152,19 @@ el.query.addEventListener('input', () => {
 });
 
 el.query.addEventListener('keydown', (ev) => {
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    step(ev.key === 'ArrowDown' ? 1 : -1);
+    return;
+  }
   if (ev.key !== 'Enter') return;
   clearTimeout(state.debounce);
-  sweep();
+  if (el.query.value.trim() === state.asked) step(ev.shiftKey ? -1 : 1);
+  else sweep();
 });
+
+el.prev.addEventListener('click', () => step(-1));
+el.next.addEventListener('click', () => step(1));
 
 fetch(`${BASE}api/story`)
   .then((r) => r.json())
