@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev readout</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<main>
+  <section class="page">
+    <div class="chrome">
+      <span class="tab">Specimen</span>
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span id="url" class="url"></span>
+      <span id="origin" class="origin"></span>
+    </div>
+    <div class="viewport">
+      <iframe id="site" class="site" title="landing page under judgment"
+              referrerpolicy="no-referrer"></iframe>
+    </div>
+    <div class="nav">
+      <button id="prev" class="arrow" aria-label="previous page">&#8592;</button>
+      <button id="next" class="arrow" aria-label="next page">&#8594;</button>
+      <span class="navlabel">Page</span>
+      <span id="count" class="count"></span>
+      <span id="name" class="name"></span>
+      <span class="hint">&#8592; &#8594; arrow keys</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panelhead">
+      <div class="title">Jev readout</div>
+      <div class="meta">
+        <span id="model" class="model"></span>
+        <span id="qcount" class="qcount"></span>
+      </div>
+    </div>
+    <div id="rows" class="rows"></div>
+  </section>
+</main>
+
+<script src="static/app.js"></script>
+</body>
+</html>

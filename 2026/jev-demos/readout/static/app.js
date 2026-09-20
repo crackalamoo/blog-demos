@@ -1,0 +1,184 @@
+/* Jev readout demo -- front end.
+ *
+ * One rendered landing page at a time; the arrows move through them.  Each
+ * row in the panel is one question answered by one request.
+ */
+'use strict';
+
+const BASE = location.pathname.replace(/[^/]*$/, '');
+
+const el = {
+  name: document.getElementById('name'),
+  site: document.getElementById('site'),
+  url: document.getElementById('url'),
+  origin: document.getElementById('origin'),
+  model: document.getElementById('model'),
+  qcount: document.getElementById('qcount'),
+  rows: document.getElementById('rows'),
+  count: document.getElementById('count'),
+  prev: document.getElementById('prev'),
+  next: document.getElementById('next'),
+};
+
+const DESIGN_WIDTH = 1280;
+
+function fit() {
+  const box = document.querySelector('.viewport');
+  document.documentElement.style.setProperty(
+    '--zoom', String(box.clientWidth / DESIGN_WIDTH));
+}
+
+const state = {
+  pages: [],
+  questions: [],
+  at: 0,
+  source: null,
+  nodes: {},
+};
+
+function pct(p) {
+  return (p * 100).toFixed(0) + '%';
+}
+
+function three(x) {
+  return x.toFixed(3);
+}
+
+function bar(track, p) {
+  requestAnimationFrame(() => {
+    track.firstChild.style.width = pct(p);
+  });
+}
+
+function add(parent, tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  parent.appendChild(node);
+  return node;
+}
+
+function track(parent) {
+  const t = add(parent, 'div', 'track');
+  add(t, 'div', 'fill');
+  return t;
+}
+
+function buildRow(q) {
+  const row = add(el.rows, 'div', 'row');
+  const head = add(row, 'div', 'head');
+  add(head, 'div', 'q', q.label);
+  add(head, 'div', 'kind', q.kind);
+  const body = add(row, 'div', 'body');
+  state.nodes[q.key] = { row, body, q };
+}
+
+function fillNoul(node, d) {
+  const wrap = add(node.body, 'div', 'noul');
+  const t = track(wrap);
+  add(wrap, 'div', 'val', three(d.p));
+  bar(t, d.p);
+}
+
+function fillScore(node, d) {
+  const ladder = add(node.body, 'div', 'ladder');
+  const nearest = Math.round(d.score);
+  node.q.rungs.forEach((name, i) => {
+    const rung = add(ladder, 'div', 'rung' + (i === nearest ? ' at' : ''));
+    add(rung, 'div', 'i', String(i));
+    add(rung, 'div', 'nm', name);
+    const t = track(rung);
+    const p = d.probabilities[String(i)];
+    add(rung, 'div', 'pv', pct(p));
+    bar(t, p);
+  });
+  const tail = add(node.body, 'div', 'tail');
+  add(tail, 'div', 'big', 'score ' + d.score.toFixed(2));
+  add(tail, 'div', null, 'confidence ' + d.confidence.toFixed(2));
+}
+
+function fillChoice(node, d) {
+  const opts = add(node.body, 'div', 'opts');
+  for (const name of node.q.options) {
+    const opt = add(opts, 'div',
+      'opt' + (name === d.choice ? ' chosen' : ''));
+    add(opt, 'div', 'nm', name);
+    const t = track(opt);
+    const p = d.probabilities[name];
+    add(opt, 'div', 'pv', pct(p));
+    bar(t, p);
+  }
+  const tail = add(node.body, 'div', 'tail');
+  add(tail, 'div', 'big', d.choice);
+  add(tail, 'div', null, 'confidence ' + d.confidence.toFixed(2));
+}
+
+function fill(d) {
+  const node = state.nodes[d.key];
+  node.body.textContent = '';
+  if (d.kind === 'noul') fillNoul(node, d);
+  else if (d.kind === 'score') fillScore(node, d);
+  else fillChoice(node, d);
+  node.row.classList.add('filled');
+}
+
+function fail(message) {
+  let node = el.rows.querySelector('.failed');
+  if (!node) node = add(el.rows, 'div', 'failed');
+  node.textContent = message;
+}
+
+function show(index) {
+  if (state.source) state.source.close();
+  state.at = (index + state.pages.length) % state.pages.length;
+  const page = state.pages[state.at];
+
+  el.name.textContent = page.name;
+  el.site.src = page.site;
+  el.url.textContent = page.live
+    ? page.site
+    : 'https://' + page.name.toLowerCase().replace(/[^a-z]/g, '') + '.example';
+  el.origin.textContent = page.live ? 'live site' : 'rendered specimen';
+  el.origin.className = 'origin' + (page.live ? ' live' : '');
+  el.count.textContent =
+    String(state.at + 1).padStart(2, '0') + ' / ' +
+    String(state.pages.length).padStart(2, '0');
+  el.rows.scrollTop = 0;
+
+  el.rows.textContent = '';
+  state.nodes = {};
+  for (const q of state.questions) buildRow(q);
+
+  const source = new EventSource(
+    BASE + 'api/read?page=' + encodeURIComponent(page.id));
+  state.source = source;
+
+  source.addEventListener('judged', (ev) => fill(JSON.parse(ev.data)));
+  source.addEventListener('done', () => source.close());
+  source.addEventListener('error', (ev) => {
+    if (source !== state.source) return;
+    source.close();
+    fail(ev.data ? JSON.parse(ev.data).error : 'read dropped');
+  });
+}
+
+window.addEventListener('resize', fit);
+fit();
+
+el.prev.addEventListener('click', () => show(state.at - 1));
+el.next.addEventListener('click', () => show(state.at + 1));
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'ArrowLeft') show(state.at - 1);
+  if (ev.key === 'ArrowRight') show(state.at + 1);
+});
+
+fetch(BASE + 'api/pages')
+  .then((r) => r.json())
+  .then((data) => {
+    state.pages = data.pages;
+    state.questions = data.questions;
+    el.model.textContent = 'model ' + data.model.name;
+    el.qcount.textContent = data.questions.length + ' judgments per page';
+    show(0);
+  });

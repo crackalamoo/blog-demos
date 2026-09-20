@@ -1,0 +1,37 @@
+Sablefold
+
+Karnwick Systems Lab — Merrowfield University
+Sablefold: low-latency retrieval over append-only sensor logs
+
+Overview
+
+Sablefold is a research prototype for answering range and nearest-neighbour queries over append-only sensor logs without maintaining a secondary index. Instead of rebuilding an index as data arrives, Sablefold maintains a folded summary structure over fixed-width log segments, which is updated in constant amortised time per append and consulted at query time to prune segments before any raw scan. The design targets deployments where ingest is continuous, storage is cheap, and the cost that actually matters is the read amplification of ad-hoc analytical queries.
+
+The prototype is written in Rust (roughly 14k lines), runs single-node on Linux and macOS, and reads logs in Parquet or a simple length-prefixed binary format. It is research code: the API is unstable, recovery after an unclean shutdown is only partially implemented, and there is no authentication layer. We release it because the results are reproducible and we would like them checked.
+
+People
+
+Dr. Ingrid Solvang-Whitcombe, principal investigator, Karnwick Systems Lab
+Petra Oyelaran, PhD candidate (structure design, evaluation)
+Tomas Reidhaar, PhD candidate (storage layer, Parquet reader)
+Marguerite Ebbsworth, MSc student (workload generator)
+
+Results
+
+All figures below are median of 11 runs on a single 32-core machine, 256 GB RAM, NVMe storage, over a 480 GB synthetic telemetry log (2.1 billion records, 9 numeric columns). Baselines are a scan-only reader and a conventional block-level zonemap index built offline.
+
+Configuration        p50 query (ms)   p99 query (ms)   Index build (min)   Space overhead
+Scan only                   9,410           11,880                   —              0.0%
+Offline zonemap             1,062            3,940                  47              1.8%
+Sablefold (k=64)              874            2,610                   —              2.4%
+Sablefold (k=256)             611            1,905                   —              6.9%
+
+Ingest throughput with Sablefold enabled was 412 MB/s against 468 MB/s for the unindexed writer, a 12% penalty. Pruning effectiveness degrades sharply on logs with no temporal locality in the queried column; on a shuffled variant of the same dataset, p50 rose to 7,930 ms, which is close to the scan baseline. We report this case rather than omit it.
+
+Preprint and code
+
+A preprint, "Fold summaries for index-free pruning on append-only logs" (Oyelaran, Reidhaar, Ebbsworth, Solvang-Whitcombe), is available from the lab page. The source, the workload generator, and the scripts that produce every number in the table above are at repo.merrowfield.ac/karnwick/sablefold under a permissive licence.
+
+Status and collaboration
+
+Sablefold is a prototype, not a database. There is no packaged release, no migration path, and no support commitment; the two of us who wrote most of it are on fixed-term contracts. We are interested in hearing from groups with real append-heavy workloads who would be willing to share anonymised query traces, and from anyone who can break the pruning bound in section 4. Correspondence: sablefold@karnwick.merrowfield.ac.

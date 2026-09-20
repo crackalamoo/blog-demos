@@ -1,0 +1,21 @@
+Fretpaper
+
+Fretpaper turns a guitar or bass recording into readable tablature.
+
+Version 2.4. macOS 14 and later. 38 MB.
+
+Drop in a WAV, AIFF, MP3 or M4A file. Fretpaper detects pitch, picks fret positions that a hand can actually reach, and writes tab you can print or export as MusicXML, MIDI or PDF. It runs on your machine. Nothing is uploaded.
+
+$29. One time. No subscription. Includes every 2.x update. Version 3 will be a paid upgrade at half price for existing buyers.
+
+Accuracy: 94% correct notes on clean single-track electric guitar, 81% on acoustic fingerstyle, 62% on distorted rhythm parts with heavy palm muting. We measured this on 120 recordings we transcribed by hand first. Distorted rhythm is our weak spot. We say so.
+
+11,400 copies sold since March 2023.
+
+"I teach forty students a week. I used to spend Sunday nights writing out tab by hand. Fretpaper got a four-minute blues solo down to about eleven minutes of cleanup instead of two hours." — Renata Osei-Bagley, guitar teacher, Portland
+
+Built by two people: Marcus Tewell, who wrote the pitch detection, and Ines Fardorff, who wrote everything you can see. We answer our own email, usually within a day.
+
+Fourteen-day trial, full features, no card. If it does not work on your recordings, do not buy it.
+
+Download · Trial · Changelog · Email us

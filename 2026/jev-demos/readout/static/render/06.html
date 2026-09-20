@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thornsalt — record and replay background jobs</title>
+<style>
+:root{--bg:#0f1417;--card:#151b20;--line:#222b32;--ink:#dfe6ea;--dim:#8b99a3;
+  --lime:#8fd96a;--red:#e07a6a;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.68 var(--mono)}
+main{max-width:800px;margin:0 auto;padding:54px 34px 80px}
+.brandline{display:flex;align-items:center;gap:10px;margin-bottom:38px}
+.sq{width:16px;height:16px;background:var(--lime);
+  clip-path:polygon(0 0,100% 0,100% 62%,62% 100%,0 100%)}
+.brand{letter-spacing:.24em;text-transform:uppercase;font-size:12px;color:var(--dim)}
+.beta{margin-left:auto;border:1px solid #3d5a2c;color:var(--lime);background:#8fd96a14;
+  border-radius:99px;padding:4px 11px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+h1{font:400 24px/1.45 var(--mono);letter-spacing:-.01em;margin:0 0 20px;color:#fff;max-width:56ch}
+.gate{border:1px solid var(--line);border-left:3px solid var(--lime);background:var(--card);
+  padding:16px 18px;color:var(--dim);font-size:14px;margin-bottom:44px}
+h2{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#5d6d78;
+  margin:44px 0 14px;font-weight:400}
+p{color:var(--dim);margin:0 0 1.3em;max-width:78ch}
+.pipe{display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;align-items:center;
+  gap:0 6px;margin:26px 0 40px;font-size:11.5px;text-align:center;color:var(--dim)}
+.node{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:14px 8px}
+.node.mid{border-color:#3d5a2c;color:var(--lime)}
+.arrow{color:#3f4d57}
+.price{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:20px 22px}
+.price .num{color:#fff;font-size:26px;letter-spacing:-.02em;margin-bottom:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.list{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:18px 20px;
+  font-size:13.5px;color:var(--dim)}
+.list .h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+.works .h{color:var(--lime)}
+.broken .h{color:var(--red)}
+.list ul{margin:0;padding:0;list-style:none}
+.list li{padding:6px 0 6px 20px;position:relative;border-top:1px solid #1b2329}
+.list li:first-child{border-top:0}
+.works li::before{content:"+";position:absolute;left:0;color:var(--lime)}
+.broken li::before{content:"\2013";position:absolute;left:0;color:var(--red)}
+.partner{border-left:2px solid var(--line);padding-left:18px;color:var(--dim)}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:13.5px;color:var(--dim)}
+.who div{border-top:1px solid var(--line);padding-top:12px}
+.invite{border:1px dashed #33414b;border-radius:8px;padding:20px 22px;margin-top:16px;color:var(--dim)}
+.invite b{color:var(--lime);font-weight:400}
+code{color:#cfe0b6}
+</style>
+</head>
+<body>
+<main>
+  <div class="brandline"><span class="sq"></span><span class="brand">Thornsalt</span>
+    <span class="beta">private beta</span></div>
+
+  <h1>Thornsalt records what your background jobs actually did, so you can replay them.</h1>
+
+  <div class="gate">Thornsalt is in private beta. It is not open for signup. There is an invite process, described at the bottom of this page, and we are currently letting in about six teams a month because that is how many we can support properly.</div>
+
+  <h2>What it does</h2>
+  <div class="pipe">
+    <div class="node">job queue</div><div class="arrow">&#8594;</div>
+    <div class="node mid">thornsalt<br>recording proxy</div><div class="arrow">&#8594;</div>
+    <div class="node">workers</div>
+  </div>
+  <p>Thornsalt sits between your job queue and your workers as a recording proxy. Every job execution is captured as a durable trace: the enqueued payload, every outbound HTTP and database call the worker made, the responses it got back, the timing, and the final outcome. When a job fails in production, you can pull that trace onto your laptop and re-run the job against the recorded responses. The worker code runs for real. The outside world is played back from tape. You can edit the code, re-run, and watch the same failure either reproduce or stop reproducing.</p>
+  <p>Supported today: Sidekiq (Ruby), Celery (Python), and River (Go). Traces are stored in your own S3-compatible bucket. We hold the index, not the payloads.</p>
+
+  <h2>Beta pricing</h2>
+  <div class="price">
+    <div class="num">$400 / month / environment</div>
+    <p style="margin:0">$400 per month per environment, flat, up to 5 million recorded job executions a month. Above that it is $30 per additional million. Beta customers keep this price for twelve months after we go generally available. We are publishing it now because we would rather you decide early whether this is affordable than find out after an integration.</p>
+  </div>
+
+  <h2>Status</h2>
+  <div class="two">
+    <div class="list works">
+      <div class="h">What works today</div>
+      <ul>
+        <li>Recording and replay for the three runtimes above.</li>
+        <li>Deterministic replay of HTTP and Postgres.</li>
+        <li>Trace retention and search by job class, queue, error, and time range.</li>
+        <li>A CLI that pulls a trace by ID and runs it locally.</li>
+        <li>Redaction rules for fields you do not want leaving your infrastructure, applied before anything is written.</li>
+      </ul>
+    </div>
+    <div class="list broken">
+      <div class="h">What does not work yet</div>
+      <ul>
+        <li>Replay is not deterministic for jobs that read the system clock in a way that changes control flow; we record the clock but do not yet patch it.</li>
+        <li>MySQL is recorded but not replayable.</li>
+        <li>Jobs that spawn subprocesses are recorded only at the boundary, so the subprocess itself is a black box.</li>
+        <li>There is no web UI for browsing traces; everything is CLI and API.</li>
+        <li>Retention is capped at 30 days.</li>
+        <li>We have not run a formal security audit, though we have written up our threat model and will send it to you.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Design partner</h2>
+  <div class="partner">Kettlemoor Freight, a 40-person logistics company in Rotterdam, has been recording their settlement jobs since February. Their median time from a failed nightly settlement run to a reproducing local test case went from roughly a day and a half to under an hour. That is one team, one workload, measured by them, not us.</div>
+
+  <h2>Who we are</h2>
+  <div class="who">
+    <div>Gunnar Thackwell wrote the recording proxy; he spent eight years on payments infrastructure.</div>
+    <div>Dilara Moncrieff-Oyelaran wrote the replay engine and the CLI, previously on a database reliability team. There is no one else yet.</div>
+  </div>
+
+  <h2>Getting an invite</h2>
+  <div class="invite">Email beta@ with your runtime, your rough job volume, and one failure you wish you could replay. We reply to everyone, including no. If we think Thornsalt will not help you, we will say that instead of onboarding you.</div>
+</main>
+</body>
+</html>

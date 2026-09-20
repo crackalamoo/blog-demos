@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev minecraft</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<main>
+  <section class="world">
+    <iframe id="viewer" title="viewer" allow="fullscreen"></iframe>
+    <div class="rail">
+      <span id="seed" class="seed"></span>
+      <ol id="milestones" class="milestones"></ol>
+    </div>
+  </section>
+
+  <section class="side">
+    <div class="objective">
+      <div class="head">
+        <span class="tag">current objective</span>
+        <span id="objective-model" class="by"></span>
+      </div>
+      <p id="objective" class="text">waiting for the first objective</p>
+      <div class="foot">sent to Jev in every decision's state</div>
+    </div>
+    <pre id="state" class="state"></pre>
+    <section class="choice">
+      <div class="head">
+        <span class="tag">jev's distribution over the legal actions</span>
+        <span id="choice-model" class="by"></span>
+      </div>
+      <div class="meters">
+        <div class="meter">
+          <span class="name">confidence</span>
+          <span class="track"><i id="confidence-fill"></i></span>
+          <span id="confidence" class="value">--</span>
+        </div>
+        <div class="counts">
+          <span id="action-count">0 legal actions</span>
+          <span id="usage"></span>
+        </div>
+      </div>
+      <ol id="actions" class="actions"></ol>
+    </section>
+  </section>
+</main>
+
+<script src="static/app.js"></script>
+</body>
+</html>

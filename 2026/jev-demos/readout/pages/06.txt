@@ -1,0 +1,35 @@
+Thornsalt
+
+Thornsalt records what your background jobs actually did, so you can replay them.
+
+Thornsalt is in private beta. It is not open for signup. There is an invite process, described at the bottom of this page, and we are currently letting in about six teams a month because that is how many we can support properly.
+
+What it does
+
+Thornsalt sits between your job queue and your workers as a recording proxy. Every job execution is captured as a durable trace: the enqueued payload, every outbound HTTP and database call the worker made, the responses it got back, the timing, and the final outcome. When a job fails in production, you can pull that trace onto your laptop and re-run the job against the recorded responses. The worker code runs for real. The outside world is played back from tape. You can edit the code, re-run, and watch the same failure either reproduce or stop reproducing.
+
+Supported today: Sidekiq (Ruby), Celery (Python), and River (Go). Traces are stored in your own S3-compatible bucket. We hold the index, not the payloads.
+
+Beta pricing
+
+$400 per month per environment, flat, up to 5 million recorded job executions a month. Above that it is $30 per additional million. Beta customers keep this price for twelve months after we go generally available. We are publishing it now because we would rather you decide early whether this is affordable than find out after an integration.
+
+What works today
+
+Recording and replay for the three runtimes above. Deterministic replay of HTTP and Postgres. Trace retention and search by job class, queue, error, and time range. A CLI that pulls a trace by ID and runs it locally. Redaction rules for fields you do not want leaving your infrastructure, applied before anything is written.
+
+What does not work yet
+
+Replay is not deterministic for jobs that read the system clock in a way that changes control flow; we record the clock but do not yet patch it. MySQL is recorded but not replayable. Jobs that spawn subprocesses are recorded only at the boundary, so the subprocess itself is a black box. There is no web UI for browsing traces; everything is CLI and API. Retention is capped at 30 days. We have not run a formal security audit, though we have written up our threat model and will send it to you.
+
+Design partner
+
+Kettlemoor Freight, a 40-person logistics company in Rotterdam, has been recording their settlement jobs since February. Their median time from a failed nightly settlement run to a reproducing local test case went from roughly a day and a half to under an hour. That is one team, one workload, measured by them, not us.
+
+Who we are
+
+Gunnar Thackwell wrote the recording proxy; he spent eight years on payments infrastructure. Dilara Moncrieff-Oyelaran wrote the replay engine and the CLI, previously on a database reliability team. There is no one else yet.
+
+Getting an invite
+
+Email beta@ with your runtime, your rough job volume, and one failure you wish you could replay. We reply to everyone, including no. If we think Thornsalt will not help you, we will say that instead of onboarding you.

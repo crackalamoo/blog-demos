@@ -163,3 +163,5 @@ cython_debug/
 
 glove/*
 glove.6B/*
+# Node
+node_modules/

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev wiki</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<header>
+  <div class="who">
+    <h1>Live English Wikipedia edits, judged</h1>
+    <p class="src">stream.wikimedia.org &middot; enwiki &middot; article
+      space &middot; humans only</p>
+  </div>
+  <div class="stats" id="stats">
+    <div class="stat live-stat">
+      <span class="stat-label">Global edits arriving</span>
+      <span class="stat-value" id="seen-rate">0.00</span>
+      <span class="stat-unit">per second</span>
+    </div>
+    <div class="stat live-stat">
+      <span class="stat-label">In-scope edits arriving</span>
+      <span class="stat-value" id="scope-rate">0.00</span>
+      <span class="stat-unit">per second</span>
+    </div>
+    <div class="stat live-stat">
+      <span class="stat-label">In-scope edits judged</span>
+      <span class="stat-value" id="judged-rate">0.00</span>
+      <span class="stat-unit" id="throttled">per second</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Total edits judged</span>
+      <span class="stat-value" id="total-judged">0</span>
+      <span class="stat-unit">since page opened</span>
+    </div>
+    <div class="stat skipped-stat">
+      <span class="stat-label">Skipped while paused</span>
+      <span class="stat-value" id="skipped-total">0</span>
+      <span class="stat-unit">never judged &middot; no spend</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Spend</span>
+      <span class="stat-value" id="spend">$0.000000</span>
+      <span class="stat-unit" id="tokens">0 in / 0 out tokens</span>
+    </div>
+  </div>
+</header>
+
+<div id="pausebar" class="pausebar" hidden>
+  <span class="pause-dot"></span>
+  <span class="pause-title">Stream paused</span>
+  <span class="pause-body">Judging is stopped. Edits arriving right
+    now are <strong>skipped and thrown away</strong> &mdash; they are
+    not queued, not judged, and cost nothing.</span>
+  <span class="pause-count"><span id="skipped-now">0</span> edits
+    skipped since you paused</span>
+  <button id="resume" type="button">Resume live stream</button>
+</div>
+
+<div class="stage">
+  <section class="chart">
+    <div class="chart-head">
+      <span class="axis-title">Y axis &mdash; if this edit stood, how
+        misleading would it be to a reader?</span>
+      <span class="legend">
+        <span class="key"><span class="ring-key"></span> ring = edit
+          summary does not honestly describe the change</span>
+      </span>
+    </div>
+    <svg id="scatter"></svg>
+    <div class="chart-foot">
+      <span class="axis-title">X axis &mdash; what is this edit doing?
+        (one column per category; column width is its share)</span>
+      <span class="legend">hover a dot for a preview &middot; click a
+        dot to pause the stream and inspect it on the right</span>
+    </div>
+
+    <section class="rail-wrap">
+      <h2>Judged edits, newest first &mdash; click any line to
+        inspect it</h2>
+      <div id="rail" class="rail"></div>
+    </section>
+  </section>
+
+  <aside id="detail" class="detail"></aside>
+</div>
+
+<div id="tip" class="tip" hidden></div>
+
+<p id="failed" class="failed" hidden></p>
+
+<script src="static/app.js"></script>
+</body>
+</html>

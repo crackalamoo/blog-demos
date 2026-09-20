@@ -1,0 +1,85 @@
+Brindlestock
+
+Brindlestock
+Platform  Suppliers  Buyers  Resources  Company  Talk to sales
+
+The operating layer for reclaimed building materials.
+
+Brindlestock connects demolition contractors, salvage yards and architectural reclaim dealers with the builders, restoration firms and specifiers who need what they're pulling out. Listing to loaded truck, on one platform, with the paperwork handled.
+
+Talk to sales    See a walkthrough
+
+Trusted by yards, contractors and specifiers across North America
+
+The problem with reclaimed supply is not demand
+There has never been more appetite for reclaimed brick, heart pine, structural steel, dimensional timber, slate and architectural salvage. Embodied-carbon requirements are pushing it into mainstream specification. Restoration work demands it outright. The appetite is not the constraint.
+
+The constraint is that the supply side runs on phone calls, spreadsheets and a yard manager's memory. A demolition contractor knows on Tuesday what is coming out of a building on Friday, and has no reliable way to tell the people who want it. A specifier writes reclaimed brick into a drawing set and then spends three weeks calling yards to find out whether 9,000 of them exist within a reasonable haul. Material that should have been sold sits in a yard until it is worth less than the space it occupies, or goes to grinding.
+
+Brindlestock exists to close that gap. We are the shared inventory layer, the matching engine and the transaction rails for a market that has always been real and has never been legible.
+
+For suppliers
+List once, reach the whole demand side. Photograph a lot, enter the basics, and Brindlestock handles classification, dimensioning where it can be inferred, and exposure to every buyer whose saved search matches. Yards using Brindlestock report material moving materially faster than through their existing channels.
+
+Deconstruction intake. Log material at the point of takedown, before it reaches the yard, and let it start finding buyers while it is still on the truck.
+
+Yard inventory. A live, searchable picture of what you have, what it is, what condition it is in and what it is worth. Multi-location supported.
+
+Buyer qualification. We verify the buyer side so you are not fielding inquiries from people who were never going to transact.
+
+Payment and release. Funds clear before the material leaves your yard. No chasing, no net-90.
+
+For buyers
+Search across the network, not across a hundred phone numbers. Brindlestock indexes inventory from every connected yard and contractor in your haul radius, with condition grading, quantity, photographs and available documentation in one place.
+
+Saved searches and alerts. Tell us you need 14,000 board feet of reclaimed longleaf within 300 miles and we tell you the moment it exists.
+
+Condition grading. A consistent grading vocabulary applied across suppliers, so "good" means the same thing in Cleveland as it does in Savannah.
+
+Reservation and hold. Lock material while your submittal goes through approval rather than losing it to whoever called first.
+
+Documentation. Chain-of-custody records, salvage provenance and the diversion figures your project needs for reporting.
+
+What's next
+Our roadmap moves fast and our customers drive it. Here is where the platform is heading.
+
+Freight integration. Brindlestock quotes and books flatbed and hotshot capacity directly against a lot, so haul cost is visible at the point of purchase rather than discovered afterward.
+
+Embodied carbon reporting. Every transaction generates a diversion and avoided-emissions figure, exportable into the project's reporting workflow in the formats reviewers expect.
+
+Assessment capture. A guided mobile flow walks a crew through documenting a building pre-demolition and produces a structured salvage manifest from the walkthrough.
+
+Automated grading. Computer vision assigns preliminary condition grades from listing photography, which a yard can accept or override, cutting listing time substantially.
+
+Structural documentation. For reclaimed structural members, the platform assembles the species, grading and provenance documentation packet that engineers of record ask for.
+
+Demand signals. Suppliers see aggregate, anonymized buyer demand in their region, so a yard knows what to hold and what to move before the material arrives.
+
+Escrow terms. Milestone-based release for larger multi-load contracts, with inspection windows built into the flow.
+
+Open API. Connect Brindlestock inventory directly into estimating and procurement systems so reclaimed options surface where the buying decision actually happens.
+
+Subscription supply. Standing agreements between high-volume buyers and yards, with recurring fulfillment against a committed spec.
+
+A leading regional distributor moved a significant share of its reclaimed masonry volume onto Brindlestock and consolidated what had been a fragmented, largely manual sales process into a single workflow. Sell-through improved. Time-to-sale on aged inventory improved more.
+
+"Before Brindlestock, everything we knew about our own inventory lived in three people's heads. Now it lives somewhere our buyers can see it."
+Operations lead, regional salvage network
+
+Pricing
+Brindlestock pricing is built around your volume, your locations and the mix of modules you need. Suppliers, buyers and networks each have different economics, and we would rather build the right structure than publish a number that fits nobody.
+
+Talk to sales and we will put together a proposal for your operation.
+
+Talk to sales
+
+Get started
+Tell us what you move and we will show you the platform against your own inventory.
+
+Talk to sales    Request a walkthrough
+
+Brindlestock
+Platform  Supplier tools  Buyer tools  Integrations  Pricing
+Resources  Guides  Grading standard  Support
+Company  About  Careers  Press  Contact
+Legal  Terms  Privacy  Security

@@ -5,6 +5,7 @@
     GET /<slug>/             a demo's page
     GET /<slug>/static/*     that demo's assets
     GET /<slug>/api/*        that demo's own endpoints
+    POST /<slug>/api/*       ditto, for demos that take one
 
 Each demo lives in its own package with its own static/ and its own logic; the
 only thing shared is the HTTP plumbing below.
@@ -20,9 +21,13 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from chat import routes as chat
+from dim import routes as dim
+from minecraft import routes as minecraft
 from music import routes as music
+from readout import routes as readout
+from wiki import routes as wiki
 
-DEMOS = [music, chat]
+DEMOS = [music, chat, dim, minecraft, readout, wiki]
 
 
 class Request:
@@ -38,6 +43,10 @@ class Request:
             return max(0.0, float(self.query[key][0]))
         except (KeyError, IndexError, ValueError):
             return default
+
+    def json_body(self) -> dict:
+        length = int(self._h.headers.get("Content-Length", 0))
+        return json.loads(self._h.rfile.read(length))
 
     def send(self, body: bytes, content_type: str, status: int = 200) -> None:
         h = self._h
@@ -145,6 +154,28 @@ class Handler(BaseHTTPRequestHandler):
             pass                        # browser navigated away mid-stream
         except ConnectionResetError:
             pass
+
+    def do_POST(self) -> None:         # noqa: N802 (stdlib naming)
+        parsed = urlparse(self.path)
+        req = Request(self, parse_qs(parsed.query))
+        try:
+            self._route_post(req, parsed.path)
+        except BrokenPipeError:
+            pass
+        except ConnectionResetError:
+            pass
+
+    def _route_post(self, req: Request, route: str) -> None:
+        # A demo opts in by defining handle_post, the way it does handle_api.
+        for demo in DEMOS:
+            prefix = f"/{demo.SLUG}/api/"
+            if not route.startswith(prefix):
+                continue
+            handle = getattr(demo, "handle_post", None)
+            if handle is not None and handle(req, route[len(prefix):]):
+                return
+            break
+        req.send_json({"error": "not found", "path": route}, status=404)
 
     def _route(self, req: Request, route: str) -> None:
         if route in ("/", "/index.html"):

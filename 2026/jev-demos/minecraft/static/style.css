@@ -1,0 +1,291 @@
+:root {
+  --bg: #0c0e11;
+  --panel: #101317;
+  --line: #1b1f25;
+  --line-soft: #15181d;
+  --ink: #e8ebf0;
+  --ink-dim: #8d96a3;
+  --ink-faint: #5d6573;
+  --accent: #b69cff;
+  --key: #7fb0ff;
+  --warn: #e28585;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+main {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+}
+
+.world, .side { min-width: 0; min-height: 0; }
+
+.world { position: relative; background: #07090b; }
+
+#viewer {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+#viewer.live { opacity: 1; }
+
+.side {
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+/* ------------------------------------------------------------ objective */
+
+.objective {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.objective .head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font: 10px/1.4 var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.objective .tag { color: var(--ink-faint); }
+
+.objective .by { color: var(--ink-faint); text-align: right; }
+
+.objective .text {
+  margin: 8px 0 0;
+  font: 15px/1.45 var(--mono);
+  color: var(--accent);
+}
+
+.objective .text.fresh { animation: objective-in 500ms ease; }
+
+@keyframes objective-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.objective .foot {
+  margin-top: 8px;
+  font: 10.5px/1.4 var(--mono);
+  color: var(--ink-faint);
+}
+
+/* ---------------------------------------------------------------- state */
+
+.state {
+  margin: 0;
+  padding: 22px 20px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  font: 11.5px/1.65 var(--mono);
+  color: var(--ink-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.state::-webkit-scrollbar { width: 0; }
+
+.state .k { color: var(--key); }
+.state .s { color: var(--ink); }
+.state .n { color: var(--accent); }
+
+/* --------------------------------------------------------------- actions */
+
+.choice {
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 0;
+  max-height: 58vh;
+}
+
+.choice .head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px 0;
+  font: 10px/1.4 var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.choice .tag { color: var(--ink-dim); }
+
+.choice .by { color: var(--ink-faint); text-align: right; }
+
+.meters { padding: 10px 20px 0; }
+
+.meter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0 10px;
+  align-items: center;
+  font: 11px/1.4 var(--mono);
+}
+
+.meter .name {
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.meter .track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.meter .track i {
+  display: block;
+  height: 100%;
+  background: var(--key);
+  transition: width 300ms ease;
+}
+
+.meter .value {
+  font-variant-numeric: tabular-nums;
+  color: var(--key);
+  font-size: 13px;
+}
+
+.counts {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  font: 10.5px/1.4 var(--mono);
+  color: var(--ink-faint);
+}
+
+.actions {
+  margin: 0;
+  padding: 10px 20px 22px;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+  min-height: 0;
+}
+
+.actions::-webkit-scrollbar { width: 0; }
+
+.action {
+  display: grid;
+  grid-template-columns: 44px 86px minmax(0, 1fr);
+  gap: 0 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.action:last-child { border-bottom: 0; }
+
+.action .value {
+  font: 12px/1.4 var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-faint);
+}
+
+.action .p {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.action .p i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--ink-faint);
+}
+
+.action .label {
+  font: 12px/1.45 var(--mono);
+  color: var(--ink-dim);
+}
+
+.action .label .mark {
+  margin-left: 8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(182, 156, 255, 0.16);
+  color: var(--accent);
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.action .why {
+  grid-column: 3;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+.action.chosen .value { color: var(--accent); }
+.action.chosen .label { color: var(--accent); }
+.action.chosen .p i { background: var(--accent); }
+.action.chosen .why { color: var(--ink-dim); }
+
+/* ------------------------------------------------------------------- rail */
+
+/* The seed and the milestones reached so far.  The seed is the only record
+ * of which world this was, so it stays on screen. */
+.rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, rgba(7, 9, 11, 0.92), transparent);
+  font: 11px/1.4 var(--mono);
+  pointer-events: none;
+}
+
+.seed { color: var(--ink-faint); flex: none; }
+
+.milestones {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.milestone { color: var(--key); white-space: nowrap; }
+
+.milestone .at { color: var(--ink-faint); }
+
+.milestone.death { color: var(--warn); }

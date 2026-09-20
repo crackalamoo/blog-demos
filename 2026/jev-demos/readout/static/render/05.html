@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fretpaper — audio to guitar tab</title>
+<style>
+:root{--ink:#22201d;--dim:#5e5952;--line:#e6e1d8;--rust:#a8481f;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:#faf8f4;color:var(--ink);
+  font:16px/1.7 -apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",sans-serif}
+main{max-width:600px;margin:0 auto;padding:70px 30px 90px}
+.top{display:flex;align-items:center;gap:11px;margin-bottom:46px}
+.ico{width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(150deg,#c4602c,#8d3512);
+  box-shadow:inset 0 1px 0 #ffffff55;position:relative}
+.ico::after{content:"";position:absolute;left:7px;right:7px;top:9px;height:16px;
+  background:repeating-linear-gradient(180deg,#ffffffcc 0 1px,#0000 1px 4px)}
+.wordmark{font-weight:640;letter-spacing:-.02em;font-size:17px}
+h1{font-size:27px;line-height:1.35;letter-spacing:-.02em;margin:0 0 14px;font-weight:600}
+.meta{font:12.5px/1.6 var(--mono);color:#8d867c;margin-bottom:34px}
+.tab{border:1px solid var(--line);background:#fff;border-radius:8px;padding:16px 18px;
+  font:12px/1.9 var(--mono);color:#3a3630;white-space:pre;overflow:hidden;margin-bottom:34px;
+  box-shadow:0 1px 2px #22201d0d}
+p{color:var(--dim);margin:0 0 1.5em}
+.price{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:22px 0;margin:34px 0}
+.price .num{font:640 30px/1 var(--mono);letter-spacing:-.03em;color:var(--ink);margin-bottom:8px}
+.acc{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:28px}
+.acc .bars{display:grid;gap:9px;margin:14px 0 12px}
+.b{display:grid;grid-template-columns:200px 1fr 44px;gap:10px;align-items:center;
+  font:11.5px/1 var(--mono);color:#8d867c}
+.b i{display:block;height:6px;border-radius:3px;background:#ece7dd;overflow:hidden}
+.b i span{display:block;height:100%;background:var(--rust)}
+.b em{font-style:normal;text-align:right;color:var(--ink)}
+blockquote{margin:0 0 28px;padding:18px 20px;background:#f2efe8;border-radius:8px;
+  font-size:15px;color:#3a3630}
+blockquote .who{display:block;margin-top:10px;font-size:13px;color:#8d867c}
+.cta{display:inline-block;background:var(--rust);color:#fff;border-radius:7px;
+  padding:12px 24px;font-weight:600;font-size:15px}
+.trial{font-size:14px;color:var(--dim);margin-top:14px}
+footer{margin-top:52px;border-top:1px solid var(--line);padding-top:20px;
+  font:12.5px/1 var(--mono);color:#8d867c}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><span class="ico"></span><span class="wordmark">Fretpaper</span></div>
+
+  <h1>Fretpaper turns a guitar or bass recording into readable tablature.</h1>
+  <div class="meta">Version 2.4. macOS 14 and later. 38 MB.</div>
+
+  <div class="tab">e|---------------7--5-------------------|
+B|-----------8---------8--5-------------|
+G|-------7-----------------7--5---------|
+D|---7-------------------------7--------|
+A|-5------------------------------------|
+E|--------------------------------------|</div>
+
+  <p>Drop in a WAV, AIFF, MP3 or M4A file. Fretpaper detects pitch, picks fret positions that a hand can actually reach, and writes tab you can print or export as MusicXML, MIDI or PDF. It runs on your machine. Nothing is uploaded.</p>
+
+  <div class="price">
+    <div class="num">$29</div>
+    <p style="margin:0">$29. One time. No subscription. Includes every 2.x update. Version 3 will be a paid upgrade at half price for existing buyers.</p>
+  </div>
+
+  <div class="acc">
+    <div class="bars">
+      <div class="b"><span>clean single-track electric</span><i><span style="width:94%"></span></i><em>94%</em></div>
+      <div class="b"><span>acoustic fingerstyle</span><i><span style="width:81%"></span></i><em>81%</em></div>
+      <div class="b"><span>distorted rhythm, palm muted</span><i><span style="width:62%"></span></i><em>62%</em></div>
+    </div>
+    <p style="margin:0;font-size:14px">Accuracy: 94% correct notes on clean single-track electric guitar, 81% on acoustic fingerstyle, 62% on distorted rhythm parts with heavy palm muting. We measured this on 120 recordings we transcribed by hand first. Distorted rhythm is our weak spot. We say so.</p>
+  </div>
+
+  <p>11,400 copies sold since March 2023.</p>
+
+  <blockquote>"I teach forty students a week. I used to spend Sunday nights writing out tab by hand. Fretpaper got a four-minute blues solo down to about eleven minutes of cleanup instead of two hours." — Renata Osei-Bagley, guitar teacher, Portland</blockquote>
+
+  <p>Built by two people: Marcus Tewell, who wrote the pitch detection, and Ines Fardorff, who wrote everything you can see. We answer our own email, usually within a day.</p>
+
+  <span class="cta">Download</span>
+  <div class="trial">Fourteen-day trial, full features, no card. If it does not work on your recordings, do not buy it.</div>
+
+  <footer>Download · Trial · Changelog · Email us</footer>
+</main>
+</body>
+</html>

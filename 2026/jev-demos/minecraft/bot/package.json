@@ -1,0 +1,21 @@
+{
+  "name": "jev-minecraft-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The body for the Minecraft demo; the decisions are made in Python.",
+  "main": "bot.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "canvas": "^3.2.3",
+    "mineflayer": "^4.39.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "prismarine-viewer": "^1.33.0"
+  },
+  "allowScripts": {
+    "canvas@3.2.3": true
+  }
+}

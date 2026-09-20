@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snaplinn — every receipt, finally in one place</title>
+<style>
+:root{--ink:#241a38;--dim:#5f5479;--line:#ece7f5;--grape:#7b3fe4;--pink:#ff5ea8;
+  --sky:#38c6ff}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);
+  font:16px/1.62 "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 32px}
+nav{position:sticky;top:0;background:#ffffffee;backdrop-filter:blur(8px);z-index:5;
+  border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:24px;height:60px;font-size:14px;color:var(--dim)}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;color:var(--ink);font-size:18px;
+  letter-spacing:-.02em}
+.blob{width:24px;height:24px;border-radius:8px;
+  background:linear-gradient(135deg,var(--grape),var(--pink))}
+.hero{background:
+  radial-gradient(70% 90% at 82% 10%,#ffd9ec 0%,#ffd9ec00 60%),
+  linear-gradient(160deg,#f3ecff 0%,#fff 72%);border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;grid-template-columns:1.25fr .75fr;gap:30px;
+  align-items:center;padding:56px 32px 60px}
+h1{font-size:38px;line-height:1.14;letter-spacing:-.03em;margin:0 0 16px}
+h1 span{background:linear-gradient(90deg,var(--grape),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--dim);font-size:17px;margin:0 0 24px}
+.store{display:inline-flex;align-items:center;gap:10px;background:#0f0b1a;color:#fff;
+  border-radius:11px;padding:11px 20px;font-weight:600;font-size:15px}
+.store .apple{width:16px;height:18px;background:#fff;border-radius:50% 50% 46% 46%/58% 58% 42% 42%}
+.phone{justify-self:center;width:190px;height:370px;border-radius:32px;background:#120d21;
+  padding:9px;box-shadow:0 30px 60px -22px #7b3fe466}
+.screen{height:100%;border-radius:25px;background:linear-gradient(#fff,#f6f1ff);
+  padding:26px 14px 14px;display:grid;gap:9px;align-content:start}
+.notch{width:56px;height:5px;border-radius:99px;background:#d6cfe6;margin:0 auto 10px}
+.rcpt{border-radius:9px;background:#fff;box-shadow:0 1px 3px #241a3814;padding:9px 10px;
+  display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim)}
+.rcpt b{color:var(--ink)}
+.tag{display:inline-block;font-size:8.5px;border-radius:99px;padding:2px 7px;
+  background:#f0e9ff;color:var(--grape)}
+section{padding:56px 0}
+h2{font-size:27px;letter-spacing:-.025em;margin:0 0 28px;text-align:center}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{border:1px solid var(--line);border-radius:14px;padding:20px;font-size:14px;color:var(--dim)}
+.card b{display:block;color:var(--ink);font-size:15.5px;margin-bottom:6px}
+.ic{width:34px;height:34px;border-radius:10px;margin-bottom:12px}
+.i1{background:linear-gradient(135deg,var(--grape),#b48bff)}
+.i2{background:linear-gradient(135deg,var(--pink),#ffa5c8)}
+.i3{background:linear-gradient(135deg,var(--sky),#8de4ff)}
+.i4{background:linear-gradient(135deg,#34d399,#a7f3d0)}
+.i5{background:linear-gradient(135deg,#fbbf24,#fde68a)}
+.i6{background:linear-gradient(135deg,#f87171,#fecaca)}
+.i7{background:linear-gradient(135deg,#60a5fa,#c7d2fe)}
+.pricing{background:linear-gradient(135deg,#f6f1ff,#fff0f7);border-radius:20px;
+  padding:34px;text-align:center}
+.pricing p{color:var(--dim);max-width:60ch;margin:0 auto}
+.free{display:inline-block;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:12px}
+.quotes{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.qu{background:#faf8ff;border-radius:14px;padding:18px 20px;font-size:15px}
+.stars{color:#fbbf24;font-size:13px;letter-spacing:2px;margin-bottom:8px}
+.faq{display:grid;gap:10px}
+.qa{border:1px solid var(--line);border-radius:12px;padding:15px 18px;font-size:14.5px;color:var(--dim)}
+.qa b{display:block;color:var(--ink);margin-bottom:4px}
+.end{text-align:center}
+.end p{color:var(--dim);max-width:52ch;margin:0 auto 22px}
+footer{border-top:1px solid var(--line);padding:26px 0 44px;text-align:center;
+  font-size:13px;color:#9b93ad}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <div class="logo"><span class="blob"></span>Snaplinn</div>
+  <span>Home</span><span>Features</span><span>Help</span><span>Download</span>
+</div></nav>
+
+<div class="hero"><div class="wrap">
+  <div>
+    <h1>Snaplinn — <span>Every receipt, finally in one place.</span></h1>
+    <p class="sub">Snap a photo. Snaplinn reads it. Your expenses are organized in seconds, automatically, without any effort from you.</p>
+    <span class="store"><span class="apple"></span>Download on the App Store</span>
+  </div>
+  <div class="phone"><div class="screen">
+    <div class="notch"></div>
+    <div class="rcpt"><span><b>Corner Roast</b><br><span class="tag">dining</span></span><b>$4.80</b></div>
+    <div class="rcpt"><span><b>Fyllings Market</b><br><span class="tag">groceries</span></span><b>$61.12</b></div>
+    <div class="rcpt"><span><b>Vale Fuel</b><br><span class="tag">fuel</span></span><b>$38.40</b></div>
+    <div class="rcpt"><span><b>Northline Rail</b><br><span class="tag">travel</span></span><b>$112.00</b></div>
+  </div></div>
+</div></div>
+
+<div class="wrap">
+<section>
+  <h2>Why people choose Snaplinn</h2>
+  <div class="cards">
+    <div class="card"><div class="ic i1"></div><b>Instant scanning.</b> Point your camera at any receipt, and the total, date, and merchant are captured right away. Crumpled paper and faded printing are supported.</div>
+    <div class="card"><div class="ic i2"></div><b>Smart categories.</b> Groceries, travel, fuel, dining and more are sorted for you. You can also make your own categories whenever you want.</div>
+    <div class="card"><div class="ic i3"></div><b>Works offline.</b> No signal is needed. Your scans are processed on your device and stay there until you choose to export them.</div>
+    <div class="card"><div class="ic i4"></div><b>Export anytime.</b> Send to CSV, PDF or your spreadsheet of choice with one tap. Perfect for tax season and expense reports.</div>
+    <div class="card"><div class="ic i5"></div><b>Search that finds it.</b> Type "coffee March" and the receipt appears. No folders, no shoeboxes, no stress.</div>
+    <div class="card"><div class="ic i6"></div><b>Warranty reminders.</b> Snaplinn notices big purchases and reminds you before the return window closes.</div>
+    <div class="card" style="grid-column:span 3"><div class="ic i7"></div><b>Multi-currency.</b> Travel with confidence. Over 140 currencies are recognized and converted automatically.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Simple, friendly pricing</h2>
+  <div class="pricing">
+    <div class="free">Free to start</div>
+    <p>Snaplinn is free to start. Scan your first receipts and explore every core feature at no cost. When you are ready for unlimited scanning, cloud backup and advanced exports, upgrade to Snaplinn Plus at a low monthly price. Cancel whenever you like.</p>
+  </div>
+</section>
+
+<section>
+  <h2>What our users are saying</h2>
+  <div class="quotes">
+    <div class="qu"><div class="stars">★★★★★</div>"I used to keep a drawer full of paper. Now everything is on my phone. Life changing." — Marcus</div>
+    <div class="qu"><div class="stars">★★★★★</div>"Very easy. I scanned 40 receipts in one evening and the categories were almost all correct." — Priya</div>
+    <div class="qu"><div class="stars">★★★★★</div>"The warranty reminder saved me money already. Highly recommend to everybody." — Dan</div>
+    <div class="qu"><div class="stars">★★★★★</div>"Finally an app that just works and does not ask me a hundred questions." — Lena</div>
+  </div>
+</section>
+
+<section>
+  <h2>Frequently asked</h2>
+  <div class="faq">
+    <div class="qa"><b>Is my data private?</b> Yes. Scans are processed on your device. Nothing is shared with third parties.</div>
+    <div class="qa"><b>Which devices are supported?</b> Snaplinn runs on iPhone and iPad. More platforms are coming soon.</div>
+    <div class="qa"><b>Do I need an account?</b> No account is required to begin. An account is only needed if you want backup across devices.</div>
+    <div class="qa"><b>Can I use it for business?</b> Many users do. Exports are formatted to work with common accounting tools.</div>
+  </div>
+</section>
+
+<section class="end">
+  <h2>Get started today</h2>
+  <p>Thousands of receipts are scanned with Snaplinn every day. Join them and take control of your spending.</p>
+  <span class="store"><span class="apple"></span>Download on the App Store</span>
+</section>
+</div>
+
+<footer>
+  <div>Support: support@snaplinn.app</div>
+  <div style="margin-top:8px">Snaplinn · Privacy Policy · Terms of Use · All rights reserved.</div>
+</footer>
+</body>
+</html>

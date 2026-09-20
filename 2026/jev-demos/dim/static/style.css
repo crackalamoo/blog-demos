@@ -1,0 +1,78 @@
+:root {
+  --bg: #0c0e11;
+  --ink: #e8ebf0;
+  --ink-faint: #5d6573;
+  --jev: #b69cff;
+  --warn: #e28585;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 18px/1.75 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding: 26px 32px 30px;
+  background: linear-gradient(to bottom, var(--bg) 58%, #0c0e11e0 82%,
+    #0c0e1100);
+}
+
+.query {
+  width: min(680px, 100%);
+  padding: 8px 0;
+  border: none;
+  border-bottom: 1px solid #1b1f25;
+  background: none;
+  color: var(--ink);
+  outline: none;
+  caret-color: var(--jev);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  transition: border-color 260ms ease;
+}
+
+.query:focus { border-bottom-color: #2c333d; }
+
+header.sweeping .query { border-bottom-color: var(--jev); }
+
+.story {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 19vh 32px 22vh;
+}
+
+.story p {
+  margin: 0 0 1.35em;
+  opacity: var(--o, 1);
+  transition: opacity 420ms cubic-bezier(.2,.7,.3,1);
+  will-change: opacity;
+}
+
+.failed {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--warn);
+}
+
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  .story { padding: 17vh 22px 20vh; }
+}
