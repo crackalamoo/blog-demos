@@ -18,6 +18,7 @@ const el = {
   seed: document.getElementById('seed'),
   milestones: document.getElementById('milestones'),
   objective: document.getElementById('objective'),
+  note: document.getElementById('note'),
   objectiveModel: document.getElementById('objective-model'),
   choiceModel: document.getElementById('choice-model'),
   confidence: document.getElementById('confidence'),
@@ -30,6 +31,13 @@ function pct(p) {
   if (p >= 0.995) return '100%';
   if (p > 0 && p < 0.005) return '<1%';
   return (p * 100).toFixed(p < 0.095 ? 1 : 0) + '%';
+}
+
+function renderNote(note) {
+  const text = note ? 'what is going wrong: ' + note : '';
+  if (el.note.textContent === text) return;
+  el.note.textContent = text;
+  el.note.classList.toggle('on', Boolean(note));
 }
 
 function renderObjective(objective) {
@@ -140,6 +148,7 @@ source.addEventListener('meta', (event) => {
   el.objectiveModel.textContent = 'written by ' + meta.objective_model.name;
   el.choiceModel.textContent = 'chosen by ' + meta.model.name;
   renderObjective(meta.objective);
+  renderNote(meta.note);
 });
 
 source.addEventListener('session', (event) => {
@@ -157,6 +166,7 @@ source.addEventListener('milestone', (event) => {
 source.addEventListener('decision', (event) => {
   const decision = JSON.parse(event.data);
   renderObjective(decision.objective);
+  renderNote(decision.note);
   renderState(decision.state);
   renderVerdict(decision);
   renderActions(decision.actions, decision.chosen, decision.probabilities);

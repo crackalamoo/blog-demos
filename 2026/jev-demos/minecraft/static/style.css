@@ -289,3 +289,12 @@ main {
 .milestone .at { color: var(--ink-faint); }
 
 .milestone.death { color: var(--warn); }
+
+.objective .note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--warn, #e0b45f);
+  display: none;
+}
+.objective .note.on { display: block; }

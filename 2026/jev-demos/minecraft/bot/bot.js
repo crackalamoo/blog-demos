@@ -119,6 +119,11 @@ const POLL_MS = 100;
 /* How long the bot is given to walk into the square it has just opened. */
 const STEP_MS = 1500;
 
+/* A pillar: how long the bot has to leave the ground, and how long it then
+ * has to come to rest on whatever is underfoot. */
+const JUMP_MS = 1000;
+const SETTLE_MS = 1500;
+
 /* How long one smelt waits for the furnace to produce, inside the action's
  * own budget.  The game takes ten seconds per item. */
 const SMELT_WAIT_MS = 15000;
@@ -645,6 +650,58 @@ function newMilestones(bot, counts, reached) {
   return out;
 }
 
+/* What the game requires to break a block type, read off the registry's
+ * harvestTools: the items it accepts for that block.  This is a property of
+ * the block, fixed for the type -- it does not read the inventory, the held
+ * item, or anything about the action being described.  A block with no
+ * harvestTools is one the game lets bare hands take. */
+const TIER_LEVEL = {
+  wooden: 0, golden: 0, stone: 1, iron: 2, diamond: 3, netherite: 3,
+};
+const LEVEL_TIER = { 1: 'stone', 2: 'iron', 3: 'diamond' };
+
+function article(word) {
+  return 'aeiou'.includes(word[0]) ? 'an' : 'a';
+}
+
+function toolRequirement(bot, name) {
+  const block = bot.registry.blocksByName[name];
+  must(block !== undefined, `no registry block named ${name}`);
+  if (block.harvestTools === undefined) {
+    return `${block.displayName} needs no tool.`;
+  }
+  const kinds = new Map();
+  for (const id of Object.keys(block.harvestTools)) {
+    const item = bot.registry.items[Number(id)];
+    must(item !== undefined,
+      `${name} lists item ${id}, which the registry has no name for`);
+    const parts = item.name.split('_');
+    const tiered = parts.length > 1 && TIER_LEVEL[parts[0]] !== undefined;
+    const kind = tiered ? parts[parts.length - 1] : item.name;
+    const level = tiered ? TIER_LEVEL[parts[0]] : null;
+    const held = kinds.get(kind);
+    if (held === undefined || (level !== null && held !== null
+      && level < held)) {
+      kinds.set(kind, level);
+    }
+  }
+  const phrases = [];
+  for (const [kind, level] of kinds) {
+    if (level === null) {
+      phrases.push(kind);
+      continue;
+    }
+    if (level === 0) {
+      phrases.push(`${article(kind)} ${kind}`);
+      continue;
+    }
+    const tier = LEVEL_TIER[level];
+    must(tier !== undefined, `${name} needs unknown tool level ${level}`);
+    phrases.push(`${article(tier)} ${tier} ${kind} or better`);
+  }
+  return `${block.displayName} needs ${phrases.join(' or ')}.`;
+}
+
 /* ----------------------------------------------------------- action space */
 
 /* Every action the game permits right now, and no others.  Nothing here asks
@@ -677,7 +734,8 @@ function enumerateActions(bot, world) {
     const digMs = bot.digTime(target);
     if (!(digMs < ACTION_TIMEOUT_MS)) continue;
     add(`break_${block.name}`,
-      `Walk to the ${block.name} ${block.entry.nearest} and break it.`,
+      `Walk to the ${block.name} ${block.entry.nearest} and break it. `
+      + toolRequirement(bot, block.name),
       () => gather(bot, block));
   }
 
@@ -770,10 +828,15 @@ function enumerateActions(bot, world) {
       `Attack the ${mob.entry.type} ${mob.entry.distance} `
       + `${mob.entry.direction}.`,
       () => attack(bot, mob.entity));
-    add(`flee_${mob.entry.type}`,
-      `Move away from the ${mob.entry.type} ${mob.entry.distance} `
-      + `${mob.entry.direction}.`,
-      () => flee(bot, mob.entity));
+    /* Fleeing is offered for the mobs the game itself categorizes as
+     * hostile.  Attacking stays offered for every mob: it is how the bot
+     * eats. */
+    if (mob.entity.kind === 'Hostile mobs') {
+      add(`flee_${mob.entry.type}`,
+        `Move away from the ${mob.entry.type} ${mob.entry.distance} `
+        + `${mob.entry.direction}.`,
+        () => flee(bot, mob.entity));
+    }
   }
 
   for (const [name, unit] of Object.entries(COMPASS)) {
@@ -795,6 +858,23 @@ function enumerateActions(bot, world) {
     add('dig_down', `Break the ${under.name} directly beneath you and drop `
       + 'into the space it leaves. You cannot see what is under it.',
       () => digDown(bot));
+  }
+
+  const over = digCandidate(bot, movements,
+    bot.entity.position.floored().offset(0, 2, 0));
+  if (over !== null) {
+    add('dig_up', `Break the ${over.name} directly above your head. This `
+      + 'opens the ceiling; it does not move you, and you stay where you '
+      + 'are.',
+      () => digUp(bot));
+  }
+
+  const footing = held !== null && bot.registry.blocksByName[held] !== undefined
+    ? pillarFooting(bot, movements) : null;
+  if (footing !== null) {
+    add('pillar_up', `Jump and place the ${held} you are holding underneath `
+      + 'yourself, leaving you standing one block higher.',
+      () => pillarUp(bot));
   }
 
   const LEVEL = { 0: 'at your feet', 1: 'at your head' };
@@ -959,6 +1039,15 @@ async function digDown(bot) {
   return note;
 }
 
+/* One block out of the ceiling.  The bot does not move. */
+async function digUp(bot) {
+  const target = bot.blockAt(bot.entity.position.floored().offset(0, 2, 0));
+  if (target === null || AIR.includes(target.name)) {
+    throw new Error('there is nothing overhead to break');
+  }
+  return breakAndCollect(bot, target);
+}
+
 /* A block the game will let this bot break within one action's clock, or
  * null.  The same standard the gather gate applies, at a named place. */
 function digCandidate(bot, movements, at) {
@@ -1121,6 +1210,52 @@ async function placeHeld(bot, ahead) {
   await bot.placeBlock(reference, new Vec3(0, 1, 0));
 }
 
+/* The block the pillar would be placed against -- the one underfoot, whose
+ * top face the new block goes on -- or null where the game would not let the
+ * bot rise a block from here: off the ground, nothing solid to place against,
+ * or something occupying the two squares the jump and the body need. */
+function pillarFooting(bot, movements) {
+  if (!bot.entity.onGround) return null;
+  const base = bot.entity.position.floored();
+  const reference = bot.blockAt(base.offset(0, -1, 0));
+  if (reference === null || reference.boundingBox !== 'block') return null;
+  for (const dy of [1, 2]) {
+    const block = bot.blockAt(base.offset(0, dy, 0));
+    if (block === null || !movements.emptyBlocks.has(block.type)) return null;
+  }
+  return reference;
+}
+
+/* Jump, and put the held block on the top face of the block underfoot while
+ * the body is clear of that square.  A mistimed jump or a refusal leaves the
+ * bot where it was, which is a thing the world does and not a fault; what
+ * left the inventory is reconciled in run() like any other placement. */
+async function pillarUp(bot) {
+  const base = bot.entity.position.floored();
+  const startY = base.y;
+  const reference = bot.blockAt(base.offset(0, -1, 0));
+  if (reference === null || reference.boundingBox !== 'block') {
+    throw new Error('nothing solid underfoot to place against');
+  }
+  const name = bot.heldItem === null ? 'block' : bot.heldItem.name;
+  await bot.lookAt(reference.position.offset(0.5, 1, 0.5), true);
+  bot.setControlState('jump', true);
+  const airborne = await until(
+    () => bot.entity.position.y >= startY + 1, JUMP_MS);
+  bot.setControlState('jump', false);
+  if (airborne) {
+    try {
+      await bot._placeBlockWithOptions(reference, new Vec3(0, 1, 0),
+        { swingArm: 'right', forceLook: 'ignore' });
+    } catch (error) {
+      if (error instanceof Bug) throw error;
+    }
+  }
+  const risen = await until(() => bot.entity.onGround
+    && bot.entity.position.floored().y === startY + 1, SETTLE_MS);
+  return risen ? null : `the ${name} did not go down underfoot`;
+}
+
 /* Abandoning a promise does not stop the body, so everything the executors
  * start is stopped here by hand. */
 async function halt(bot) {
@@ -1146,6 +1281,15 @@ const INTERRUPTED = Symbol('interrupted');
  * walk that is no longer the question.  Nothing else interrupts -- what to
  * do about a mob in view, the dark or an empty stomach is the model's to
  * decide, on its own decision. */
+/* The pathfinder's own rejections, in words.  With nothing to build from,
+ * a target the bot cannot walk to is an ordinary state of the world. */
+const WALK_FAILURES = new Map([
+  ['NoPath', 'no walkable route to it'],
+  ['Timeout', 'no walkable route found in time'],
+  ['PathStopped', 'the walk stopped short of it'],
+  ['GoalChanged', 'the walk was redirected'],
+]);
+
 async function run(action, bot) {
   const before = inventoryCounts(bot);
   const beforeHealth = Math.round(bot.health);
@@ -1178,7 +1322,8 @@ async function run(action, bot) {
   } catch (error) {
     if (error instanceof Bug) throw error;
     await halt(bot);
-    outcome = `failed: ${error.message}`;
+    const plain = WALK_FAILURES.get(error.name);
+    outcome = `failed: ${plain === undefined ? error.message : plain}`;
   } finally {
     bot.removeListener('health', watch);
   }
@@ -1262,14 +1407,22 @@ async function main() {
     remember('death', cause);
     console.log(`died: ${cause}`);
   });
-  bot.pathfinder.setMovements(new Movements(bot));
+  const movements = new Movements(bot);
+  /* The pathfinder will otherwise spend the bot's own dirt and cobblestone
+   * to build towers up and bridges across, while walking to somewhere the
+   * model asked to go: a resource decision the model did not take and was
+   * not told about.  Emptying the scaffolding list leaves every route with
+   * no blocks to place, which is what both flags below read; pillar_up is
+   * where a block goes down deliberately. */
+  movements.allow1by1towers = false;
+  movements.scafoldingBlocks = [];
+  bot.pathfinder.setMovements(movements);
 
-  /* What the bot tried to put down, whoever asked for it: the pathfinder
-   * builds towers and bridges out of the bot's own dirt and cobblestone,
-   * and blockPlaced does not fire for those -- mineflayer cannot always
-   * tell the server's answer apart, and throws where it cannot.  The
-   * attempt is recorded here and reconciled against the inventory in
-   * run(), so nothing is claimed that the inventory does not show. */
+  /* What the bot tried to put down: blockPlaced does not fire for every
+   * placement -- mineflayer cannot always tell the server's answer apart,
+   * and throws where it cannot.  The attempt is recorded here and
+   * reconciled against the inventory in run(), so nothing is claimed that
+   * the inventory does not show. */
   bot.placed = [];
   const genericPlace = bot._genericPlace.bind(bot);
   bot._genericPlace = (reference, face, options) => {

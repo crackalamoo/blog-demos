@@ -16,7 +16,7 @@ import json
 import os
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Deque, Dict, List
+from typing import Any, Deque, Dict, List, Tuple
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -46,7 +46,7 @@ OBJECTIVE_MAX_OUTPUT_TOKENS = 512
 
 #: Decisions between objectives.  A death re-sets the objective immediately and
 #: restarts the count.
-DECISIONS_PER_OBJECTIVE = 32
+DECISIONS_PER_OBJECTIVE = 16
 
 #: Recent actions, for the objective call only.  It is deliberately not part of
 #: the per-decision payload: that payload is a snapshot plus one last_action,
@@ -57,13 +57,20 @@ OBJECTIVE_SYSTEM = (
     "You are setting the current objective for a bot playing Minecraft "
     "survival. Its world was generated from a random seed that neither of "
     "you has seen. "
-    "You will be given the bot's situation right now, and its recent "
-    "actions and their outcomes, oldest first. Reply with one objective "
+    "You will be given the bot's situation right now, the actions it "
+    "can take at this moment, and its recent actions and their "
+    "outcomes, oldest first. Only name something it can reach through "
+    "those actions. Reply with one objective "
     "in the imperative, under ten words, "
-    "saying what the bot should try to accomplish next. Base it on what the "
-    "log shows actually happened, including what failed. If its recent "
-    "actions show it making a mistake, aim the objective at correcting "
-    "that. An empty log means the bot has just spawned."
+    "naming what the bot should achieve, never how to achieve it. Name "
+    "no compass direction and none of the available actions: "
+    "'Get something to eat before dusk' is an objective, "
+    "'Explore south to find food' is not. Base it on what the "
+    "log shows actually happened, including what failed. An empty log "
+    "means the bot has just spawned. "
+    "Also reply with a note: if the recent actions show the bot making "
+    "a mistake, say in one sentence what it is doing wrong. If they do "
+    "not, make the note an empty string."
 )
 
 OBJECTIVE_SCHEMA = {
@@ -72,8 +79,11 @@ OBJECTIVE_SCHEMA = {
     "schema": {
         "type": "object",
         "additionalProperties": False,
-        "required": ["objective"],
-        "properties": {"objective": {"type": "string"}},
+        "required": ["objective", "note"],
+        "properties": {
+            "objective": {"type": "string"},
+            "note": {"type": "string"},
+        },
     },
 }
 
@@ -82,6 +92,10 @@ OBJECTIVE_SCHEMA = {
 #: it is given.  Who wrote the objective is for the page to say, not for the
 #: state to carry, so the key names the thing and not its author.
 OBJECTIVE_KEY = "current_objective"
+
+#: Sits beside the objective: what the recent actions show going
+#: wrong, or absent when nothing is.
+NOTE_KEY = "note_on_recent_actions"
 
 _CLIENT: Any = None
 _JEV: Any = None
@@ -98,7 +112,10 @@ class ActionLog:
         return list(self._entries)
 
 
-def choose_objective(log: ActionLog, state: Dict[str, Any]) -> str:
+def choose_objective(
+    log: ActionLog, state: Dict[str, Any],
+    actions: List[Dict[str, Any]],
+) -> Tuple[str, str]:
     """One ChatGPT call over the recent-action log.
 
     The static prompt is the whole prefix and the log is the last message,
@@ -107,7 +124,9 @@ def choose_objective(log: ActionLog, state: Dict[str, Any]) -> str:
     messages = [
         {"role": "system", "content": OBJECTIVE_SYSTEM},
         {"role": "user", "content": json.dumps(
-            {"situation": state, "recent_actions": log.entries()},
+            {"situation": state,
+             "actions_available_now": [a["label"] for a in actions],
+             "recent_actions": log.entries()},
             indent=2)},
     ]
     response = _client().chat.completions.create(
@@ -137,7 +156,11 @@ def choose_objective(log: ActionLog, state: Dict[str, Any]) -> str:
             f"{CHAT_MODEL} returned no objective: {detail} "
             f"payload={payload!r}"
         )
-    return objective.strip()
+    note = payload.get("note")
+    if not isinstance(note, str):
+        raise RuntimeError(
+            f"{CHAT_MODEL} returned no note: {detail} payload={payload!r}")
+    return objective.strip(), note.strip()
 
 
 def _client() -> OpenAI:

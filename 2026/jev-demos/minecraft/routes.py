@@ -34,6 +34,7 @@ from .decider import (
     CHAT_MODEL,
     DECISIONS_PER_OBJECTIVE,
     JEV_MODEL,
+    NOTE_KEY,
     OBJECTIVE_KEY,
     ActionLog,
     choose_action,
@@ -58,6 +59,7 @@ _SESSION: Optional[Dict[str, Any]] = None
 _LATEST: Optional[Dict[str, Any]] = None
 _MILESTONES: List[Dict[str, Any]] = []
 _objective: Optional[str] = None
+_note = ""
 _since_objective = 0
 _decisions = 0
 _input_tokens = 0
@@ -89,6 +91,7 @@ def meta() -> dict:
             "model": {"name": JEV_MODEL, "live": True},
             "objective_model": {"name": CHAT_MODEL, "live": True},
             "objective": _objective,
+            "note": _note,
             "decisions_per_objective": DECISIONS_PER_OBJECTIVE,
             "session": _SESSION,
             "milestones": list(_MILESTONES),
@@ -121,7 +124,8 @@ def _adopt(session: Dict[str, Any]) -> None:
     from the one held; an identical one arriving after a restart is the run
     already in progress, and its milestones are about to be replayed.
     """
-    global _SESSION, _LATEST, _objective, _since_objective, _decisions
+    global _SESSION, _LATEST, _objective, _note, _since_objective
+    global _decisions
     global _input_tokens
     _require(session, ("seed", "viewer", "minecraft", "version"))
     if _SESSION == session:
@@ -130,6 +134,7 @@ def _adopt(session: Dict[str, Any]) -> None:
     _LATEST = None
     _MILESTONES.clear()
     _objective = None
+    _note = ""
     _since_objective = 0
     _decisions = 0
     _input_tokens = 0
@@ -148,7 +153,8 @@ def _decide(body: Dict[str, Any]) -> Dict[str, Any]:
     objective before the state is assembled, so the bot is told what it is
     working towards on the same decision it learns it died.
     """
-    global _LATEST, _objective, _since_objective, _decisions, _input_tokens
+    global _LATEST, _objective, _note, _since_objective, _decisions
+    global _input_tokens
     _require(body, ("state", "actions", "history", "ticks", "decision",
                     "session"))
     state: Dict[str, Any] = body["state"]
@@ -185,10 +191,14 @@ def _decide(body: Dict[str, Any]) -> Dict[str, Any]:
 
         stale = _since_objective >= DECISIONS_PER_OBJECTIVE
         if _objective is None or died or stale:
-            _objective = choose_objective(_LOG, state)
+            _objective, _note = choose_objective(
+                _LOG, state, actions)
             _since_objective = 0
 
         payload = {OBJECTIVE_KEY: _objective, **state}
+        if _note:
+            payload = {OBJECTIVE_KEY: _objective,
+                       NOTE_KEY: _note, **state}
         decision = choose_action(payload, actions)
         chosen = decision.label
         labels = [a["label"] for a in actions]
@@ -206,6 +216,7 @@ def _decide(body: Dict[str, Any]) -> Dict[str, Any]:
             "confidence": decision.confidence,
             "probabilities": decision.probabilities,
             "objective": _objective,
+            "note": _note,
             "since_objective": _since_objective,
             "usage": {
                 "input_tokens": decision.input_tokens,
