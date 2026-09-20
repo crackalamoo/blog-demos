@@ -1,0 +1,232 @@
+:root {
+  --bg: #0c0e11;
+  --panel: #101317;
+  --line: #1b1f25;
+  --line-soft: #15181d;
+  --ink: #e8ebf0;
+  --ink-dim: #8d96a3;
+  --ink-faint: #5d6573;
+  --melody: #7fb0ff;
+  --harmony: #83d6bd;
+  --warn: #e28585;
+  --accent: #b69cff;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ----------------------------------------------------------------- layout */
+
+main {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+.roll-wrap, .trace-wrap {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Not scrollable: the roll is translated under a fixed playhead, and a
+ * scrollbar would advertise a total length. */
+.roll-scroll {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 48px 0;
+  /* The music must dissolve at both edges; a hard edge reads as an ending. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0,
+    #000 11%, #000 89%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0,
+    #000 11%, #000 89%, transparent 100%);
+}
+
+#roll {
+  position: relative;
+  flex: none;
+  will-change: transform;
+}
+
+/* ------------------------------------------------------------ piano roll */
+
+.lane { position: relative; margin-bottom: 20px; }
+.lane:last-of-type { margin-bottom: 0; }
+
+.lane-grid {
+  position: relative;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+/* One node per bar, so bars scrolled past the left edge can be culled. */
+.bar { position: absolute; top: 0; bottom: 0; }
+
+.gridline { position: absolute; top: 0; bottom: 0; width: 1px; background: #16191f; }
+.gridline.beat { background: #1c2027; }
+.gridline.bar { background: #262b33; }
+.rowline { position: absolute; left: 0; right: 0; height: 1px; background: #13161b; }
+.rowline.octave { background: #1a1e24; }
+
+/* The run's tonal center, in every octave of both lanes. */
+.tonic {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.cell {
+  position: absolute;
+  border-radius: 2px;
+  background: var(--voice-color);
+  transition: opacity 180ms ease;
+}
+
+.cell.ghost { opacity: 0.16; }
+
+.cell.low {
+  background: repeating-linear-gradient(
+    135deg, var(--voice-color) 0 3px, #00000066 3px 6px);
+}
+
+.cell.appear { animation: pop 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes pop {
+  from { transform: scaleY(0.2); opacity: 0; }
+  to   { transform: scaleY(1); }
+}
+
+.cell.tail { border-radius: 1px; }
+
+.rest {
+  position: absolute;
+  height: 2px;
+  border-radius: 1px;
+  background: #2a313b;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 12px 1px #b69cff66;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.playhead.on { opacity: 1; }
+
+/* ---------------------------------------------------------------- trace */
+
+#trace {
+  margin: 0;
+  padding: 48px 40px 96px 28px;
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: none;
+}
+
+#trace::-webkit-scrollbar { width: 0; }
+
+.entry {
+  padding: 10px 0;
+  animation: rise 240ms ease-out;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; } }
+
+.entry-top {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--voice-color);
+  flex: none;
+}
+
+.addr { color: var(--ink-faint); }
+.chosen { color: var(--ink); margin-left: auto; }
+.conf { color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.entry.low .conf { color: var(--warn); }
+
+.bars { margin: 7px 0 0 15px; display: grid; gap: 4px; }
+
+.prob {
+  display: grid;
+  grid-template-columns: 40px 1fr 38px;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: #4d5561;
+}
+
+.prob .meter { height: 3px; border-radius: 2px; background: #171b21; overflow: hidden; }
+.prob .meter i { display: block; height: 100%; background: var(--voice-color); opacity: 0.35; }
+.prob.is-chosen { color: var(--ink-dim); }
+.prob.is-chosen .meter i { opacity: 0.95; }
+
+.gap { height: 22px; }
+
+/* ------------------------------------------------------------- transport */
+
+.transport {
+  position: fixed;
+  left: 32px;
+  bottom: 28px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #1a1f27;
+  color: var(--ink-dim);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 200ms ease, color 200ms ease, opacity 200ms ease;
+}
+
+.transport:hover:not(:disabled) { background: #222933; color: var(--ink); }
+.transport:disabled { opacity: 0.35; cursor: default; }
+.transport:focus-visible { outline: 1px solid #3a4250; outline-offset: 3px; }
+
+.transport svg { width: 22px; height: 22px; fill: currentColor; }
+.transport .glyph-stop { display: none; }
+.transport.busy .glyph-play { display: none; }
+.transport.busy .glyph-stop { display: block; }
+
+@media (max-width: 1000px) {
+  main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 42vh; }
+  .roll-scroll { padding: 28px 0; }
+  #trace { padding: 24px 24px 96px; }
+}

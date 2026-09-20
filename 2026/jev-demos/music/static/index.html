@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev music</title>
+<link rel="stylesheet" href="static/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.5.42/Tone.js"></script>
+</head>
+<body>
+<main>
+  <section class="roll-wrap">
+    <div class="roll-scroll">
+      <div id="roll"></div>
+      <div id="playhead" class="playhead"></div>
+    </div>
+  </section>
+
+  <section class="trace-wrap">
+    <ol id="trace"></ol>
+  </section>
+</main>
+
+<button id="btn-transport" class="transport" type="button" aria-label="play">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <polygon class="glyph-play" points="9,6.5 18,12 9,17.5"></polygon>
+    <rect class="glyph-stop" x="8.5" y="8.5" width="7" height="7" rx="1"></rect>
+  </svg>
+</button>
+
+<script src="static/app.js"></script>
+</body>
+</html>

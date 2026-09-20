@@ -1,0 +1,12 @@
+[project]
+name = "jev-demos"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "openai>=3.16.2",
+    "python-dotenv>=1.2.3",
+    "typesafe-sdk>=0.7.0",
+]
+
+[dependency-groups]
+dev = []
