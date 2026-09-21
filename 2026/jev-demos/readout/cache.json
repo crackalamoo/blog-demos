@@ -1,1 +1,857 @@
-{}
+{
+ "258ad3c0bd2730c636b9fd34a5b6fe12350d3dbce7500ff23e18471ec8cfdcac": {
+  "answers": {
+   "category": {
+    "choice": "consumer app",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 1.0,
+     "dev tool": 0.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.97,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.01,
+     "3": 0.97,
+     "4": 0.02
+    },
+    "score": 3.02
+   },
+   "coyness": {
+    "confidence": 0.64,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.23,
+     "1": 0.59,
+     "2": 0.17,
+     "3": 0.01,
+     "4": 0.0
+    },
+    "score": 0.98
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.89
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.07
+   },
+   "omission": {
+    "choice": "price",
+    "confidence": 0.45,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.0,
+     "price": 0.5700000000000001,
+     "proof it works": 0.01,
+     "what it does": 0.0,
+     "who built it": 0.42
+    }
+   },
+   "readiness": {
+    "confidence": 0.96,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.95,
+     "4": 0.05
+    },
+    "score": 3.04
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.98
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.94,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.93,
+     "4": 0.07
+    },
+    "score": 3.07
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.98
+   }
+  },
+  "input_tokens": 2032,
+  "output_tokens": 267
+ },
+ "6fbfb0b27bf93efc0b9e77d458b11418823672059ea59befbf3fb35549cb2d47": {
+  "answers": {
+   "category": {
+    "choice": "consumer app",
+    "confidence": 0.96,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 0.97,
+     "dev tool": 0.0,
+     "marketplace": 0.0,
+     "other": 0.03,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.85,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.05,
+     "1": 0.82,
+     "2": 0.13,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 1.07
+   },
+   "coyness": {
+    "confidence": 0.85,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.01,
+     "3": 0.16,
+     "4": 0.83
+    },
+    "score": 3.82
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.04
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.03
+   },
+   "omission": {
+    "choice": "what it does",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.0,
+     "price": 0.0,
+     "proof it works": 0.0,
+     "what it does": 1.0,
+     "who built it": 0.0
+    }
+   },
+   "readiness": {
+    "confidence": 0.96,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.97,
+     "1": 0.01,
+     "2": 0.02,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 0.05
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.05
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.88,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.86,
+     "1": 0.14,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 0.15
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.07
+   }
+  },
+  "input_tokens": 1743,
+  "output_tokens": 269
+ },
+ "7bd4373db8efbff29880bcaddae5f37d5084b8ca8a33dd65c14e3487712baeb7": {
+  "answers": {
+   "category": {
+    "choice": "dev tool",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 0.0,
+     "dev tool": 1.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.97,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.03,
+     "4": 0.97
+    },
+    "score": 3.97
+   },
+   "coyness": {
+    "confidence": 0.39,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.12,
+     "1": 0.2,
+     "2": 0.43,
+     "3": 0.2,
+     "4": 0.05
+    },
+    "score": 1.88
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.98
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.06
+   },
+   "omission": {
+    "choice": "proof it works",
+    "confidence": 0.7,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.01,
+     "price": 0.0,
+     "proof it works": 0.76,
+     "what it does": 0.0,
+     "who built it": 0.23
+    }
+   },
+   "readiness": {
+    "confidence": 0.54,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.17,
+     "1": 0.5599999999999999,
+     "2": 0.15,
+     "3": 0.11,
+     "4": 0.01
+    },
+    "score": 1.21
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.91
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.45,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.02,
+     "1": 0.16,
+     "2": 0.06,
+     "3": 0.52,
+     "4": 0.24
+    },
+    "score": 2.83
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.45
+   }
+  },
+  "input_tokens": 2731,
+  "output_tokens": 269
+ },
+ "a72c76238f9fb7dd76c5cfd7b725ef91a81180cc724ddaa7ea935a2c158a78c1": {
+  "answers": {
+   "category": {
+    "choice": "dev tool",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 0.0,
+     "dev tool": 1.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 1.0
+    },
+    "score": 4.0
+   },
+   "coyness": {
+    "confidence": 0.98,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.98,
+     "1": 0.01,
+     "2": 0.01,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 0.03
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.99
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.98
+   },
+   "omission": {
+    "choice": "nothing - the page is complete",
+    "confidence": 0.99,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 1.0,
+     "price": 0.0,
+     "proof it works": 0.0,
+     "what it does": 0.0,
+     "who built it": 0.0
+    }
+   },
+   "readiness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 1.0
+    },
+    "score": 4.0
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.98
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 1.0
+    },
+    "score": 3.99
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.96
+   }
+  },
+  "input_tokens": 2362,
+  "output_tokens": 272
+ },
+ "d1d006600fb944ebc3fe3ea4c68090df70412debca735a496fd6663ef51b95d9": {
+  "answers": {
+   "category": {
+    "choice": "marketplace",
+    "confidence": 0.99,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 0.0,
+     "dev tool": 0.01,
+     "marketplace": 0.99,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.92,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.01,
+     "3": 0.9,
+     "4": 0.09
+    },
+    "score": 3.08
+   },
+   "coyness": {
+    "confidence": 0.67,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.04,
+     "1": 0.19,
+     "2": 0.66,
+     "3": 0.1,
+     "4": 0.01
+    },
+    "score": 1.84
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.05
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.06
+   },
+   "omission": {
+    "choice": "price",
+    "confidence": 0.92,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.0,
+     "price": 0.94,
+     "proof it works": 0.01,
+     "what it does": 0.0,
+     "who built it": 0.05
+    }
+   },
+   "readiness": {
+    "confidence": 0.81,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.14,
+     "3": 0.78,
+     "4": 0.08
+    },
+    "score": 2.94
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.97
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.88,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.14,
+     "3": 0.86,
+     "4": 0.0
+    },
+    "score": 2.86
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.22
+   }
+  },
+  "input_tokens": 2648,
+  "output_tokens": 269
+ },
+ "d49b0003fb50e1b420dffdb98f17552f5c474144a1032ec3db26133cecbd5ab2": {
+  "answers": {
+   "category": {
+    "choice": "research project",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 0.0,
+     "dev tool": 0.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 1.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.98,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.03,
+     "4": 0.97
+    },
+    "score": 3.97
+   },
+   "coyness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 1.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 0.0
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.05
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.06
+   },
+   "omission": {
+    "choice": "price",
+    "confidence": 0.95,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.03,
+     "price": 0.97,
+     "proof it works": 0.0,
+     "what it does": 0.0,
+     "who built it": 0.0
+    }
+   },
+   "readiness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 1.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 1.0
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.97
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.66,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.59,
+     "4": 0.41
+    },
+    "score": 3.41
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.78
+   }
+  },
+  "input_tokens": 2257,
+  "output_tokens": 267
+ },
+ "d5b44cc6bb6e2d1357f6f0cef54e280f8ffc25676639b820ee92903295eadfe1": {
+  "answers": {
+   "category": {
+    "choice": "dev tool",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 0.0,
+     "dev tool": 1.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.98,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.02,
+     "4": 0.98
+    },
+    "score": 3.97
+   },
+   "coyness": {
+    "confidence": 0.99,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.99,
+     "1": 0.01,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 0.01
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.99
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.98
+   },
+   "omission": {
+    "choice": "nothing - the page is complete",
+    "confidence": 0.84,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.88,
+     "price": 0.0,
+     "proof it works": 0.08,
+     "what it does": 0.0,
+     "who built it": 0.04
+    }
+   },
+   "readiness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 1.0,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 2.0
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.98
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.93,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.01,
+     "3": 0.91,
+     "4": 0.08
+    },
+    "score": 3.07
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.13
+   }
+  },
+  "input_tokens": 2154,
+  "output_tokens": 272
+ },
+ "d90db3e576b34a0894ed128a382f9f794ab65f8dd6dc787132eb6553d50127fb": {
+  "answers": {
+   "category": {
+    "choice": "consultancy",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 1.0,
+     "consumer app": 0.0,
+     "dev tool": 0.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 0.63,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.24,
+     "2": 0.56,
+     "3": 0.2,
+     "4": 0.0
+    },
+    "score": 1.96
+   },
+   "coyness": {
+    "confidence": 0.39,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.09,
+     "1": 0.29,
+     "2": 0.38,
+     "3": 0.23,
+     "4": 0.01
+    },
+    "score": 1.78
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.06
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.04
+   },
+   "omission": {
+    "choice": "proof it works",
+    "confidence": 0.74,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.0,
+     "price": 0.2,
+     "proof it works": 0.8,
+     "what it does": 0.0,
+     "who built it": 0.0
+    }
+   },
+   "readiness": {
+    "confidence": 0.36,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.17,
+     "1": 0.01,
+     "2": 0.01,
+     "3": 0.59,
+     "4": 0.22
+    },
+    "score": 2.67
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.74
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.97,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.02,
+     "4": 0.98
+    },
+    "score": 3.96
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.06
+   }
+  },
+  "input_tokens": 2639,
+  "output_tokens": 270
+ },
+ "ef7c5402069f8ff433ac16437b0e20681a36975bafa0482a8ccc832b7e031a38": {
+  "answers": {
+   "category": {
+    "choice": "consumer app",
+    "confidence": 1.0,
+    "kind": "choice",
+    "probabilities": {
+     "consultancy": 0.0,
+     "consumer app": 1.0,
+     "dev tool": 0.0,
+     "marketplace": 0.0,
+     "other": 0.0,
+     "research project": 0.0
+    }
+   },
+   "concreteness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 1.0
+    },
+    "score": 3.99
+   },
+   "coyness": {
+    "confidence": 1.0,
+    "kind": "score",
+    "probabilities": {
+     "0": 1.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4": 0.0
+    },
+    "score": 0.01
+   },
+   "has_price": {
+    "kind": "noul",
+    "p": 0.99
+   },
+   "names_customer": {
+    "kind": "noul",
+    "p": 0.97
+   },
+   "omission": {
+    "choice": "nothing - the page is complete",
+    "confidence": 0.96,
+    "kind": "choice",
+    "probabilities": {
+     "nothing - the page is complete": 0.98,
+     "price": 0.0,
+     "proof it works": 0.01,
+     "what it does": 0.0,
+     "who built it": 0.01
+    }
+   },
+   "readiness": {
+    "confidence": 0.7,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.35,
+     "4": 0.65
+    },
+    "score": 3.64
+   },
+   "says_what_it_does": {
+    "kind": "noul",
+    "p": 0.99
+   },
+   "shipped_vs_roadmap": {
+    "confidence": 0.93,
+    "kind": "score",
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.0,
+     "2": 0.0,
+     "3": 0.92,
+     "4": 0.08
+    },
+    "score": 3.08
+   },
+   "usable_today": {
+    "kind": "noul",
+    "p": 0.98
+   }
+  },
+  "input_tokens": 1816,
+  "output_tokens": 272
+ }
+}
