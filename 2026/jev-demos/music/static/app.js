@@ -1,11 +1,11 @@
 /* Jev music demo -- front end.
  *
  * Decisions are buffered per bar and revealed a whole bar at a time: all 24
- * slots of a bar are decided in one forward pass.  Reveal timing is cosmetic,
- * so setTimeout is fine there.
+ * slots of a bar are decided together, in a rough pass and a refinement
+ * round.  Reveal timing is cosmetic, so setTimeout is fine there.
  *
- * Audio is scheduled on Tone.Transport in musical time (bars:beats:sixteenths).
- * No setTimeout touches audio -- it drifts audibly over even a few bars.
+ * Audio is scheduled on Tone.Transport in musical time (bars:beats:sixteenths)
+ * and never by setTimeout.
  *
  * The stream is endless: bars are scheduled and painted as they arrive, the
  * roll translates under a fixed playhead, and bars behind it are culled.

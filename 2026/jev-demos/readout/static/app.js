@@ -1,7 +1,7 @@
 /* Jev readout demo -- front end.
  *
- * One rendered landing page at a time; the arrows move through them.  Each
- * row in the panel is one question answered by one request.
+ * One rendered landing page at a time; the arrows move through them.  The
+ * rows in the panel are the ten questions, all answered by one request.
  */
 'use strict';
 

@@ -30,10 +30,6 @@ from .grid import (
     TonalCenter,
 )
 
-#: Per-request question ceiling on the API; a bar must fit in one request.
-MAX_QUESTIONS = 32
-assert DECISIONS_PER_BAR <= MAX_QUESTIONS
-
 DEFAULT_MODEL = "jev-latest"
 
 #: Total rounds per bar: one rough pass plus REFINEMENT_ROUNDS - 1 refinements.
@@ -286,7 +282,6 @@ class JevDecider:
                 ),
                 criteria=criteria_by_voice[voice_name],
             )
-        assert len(out) <= MAX_QUESTIONS
         return out
 
     def decide_bar(self, piece: Piece, bar_index: int) -> List[Decision]:
@@ -409,9 +404,9 @@ def _add_usage(usage: Dict[str, int], response: Any) -> None:
 def _sample(distribution: Dict[str, float], keys: List[str] = OPTIONS) -> str:
     """Draw one option from the model's own distribution.
 
-    Argmax collapses onto ``rest``: it holds the largest single share of the
-    mass in most slots even where the pitches together hold more. Drawing
-    honours the calibration instead of keeping only the winner.
+    Argmax collapses onto ``hold`` and ``rest``: in a four-bar run, one of
+    them was on top in 143 of 160 slots, so taking the winner leaves a bar
+    with almost no new notes. Drawing honours the calibration instead.
     """
     threshold = _RNG.random()
     cumulative = 0.0

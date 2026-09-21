@@ -1,9 +1,9 @@
 /* Jev dim demo -- front end.
  *
- * Every paragraph is judged against the query on its own, and each verdict is
- * applied the moment it lands, so the page resolves as a wave rather than all
- * at once.  A new query drops the stream, which is what cancels the sweep on
- * the server too.
+ * Paragraphs are judged in chunks of neighbors, one request per chunk, and
+ * each verdict is applied the moment its chunk lands, so the page resolves in
+ * patches rather than all at once.  A new query drops the stream, which is
+ * what cancels the sweep on the server too.
  */
 'use strict';
 

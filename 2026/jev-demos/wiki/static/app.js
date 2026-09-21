@@ -37,10 +37,10 @@ const el = {
 };
 
 const state = {
-  // The Choice's option keys, in routes.judge_action order.
+  // The Choice's option keys, in routes.ask order.
   labels: ['vandalism', 'reverting damage', 'adding content',
            'citation work', 'copyedit', 'metadata', 'other'],
-  // Short names for the Score's five rungs in routes.judge_misleading.
+  // Short names for the Score's five rungs in routes.ask.
   rungs: ['no effect on the reader', 'cosmetic only',
           'slightly misleading', 'materially wrong', 'outright false'],
   edits: new Map(),
