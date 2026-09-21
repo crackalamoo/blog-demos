@@ -30,8 +30,8 @@ _TEXT = (Path(__file__).resolve().parent / "silver_blaze.txt").read_text(
 
 PARAGRAPHS = [p for p in _TEXT.split("\n\n") if p.strip()]
 
-# The API caps a request at 32 questions; a chunk is one request.
-MAX_QUESTIONS_PER_REQUEST = 32
+# Of the chunk sizes scored against blind labels (1, 8, 32), 32 did best.
+QUESTIONS_PER_REQUEST = 32
 
 
 def handle_api(req, rest: str) -> bool:
@@ -96,10 +96,10 @@ def _sweep(req) -> None:
     req.begin_sse()
     req.event("meta", {"query": query, "count": len(PARAGRAPHS)})
 
-    chunks = [range(start, min(start + MAX_QUESTIONS_PER_REQUEST,
+    chunks = [range(start, min(start + QUESTIONS_PER_REQUEST,
                                len(PARAGRAPHS)))
               for start in range(0, len(PARAGRAPHS),
-                                 MAX_QUESTIONS_PER_REQUEST)]
+                                 QUESTIONS_PER_REQUEST)]
 
     started = time.monotonic()
     client = TypeSafeClient()
