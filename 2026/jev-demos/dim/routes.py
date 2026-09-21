@@ -25,15 +25,6 @@ STATIC = Path(__file__).resolve().parent / "static"
 
 MODEL = "jev-latest"
 
-INSTRUCTIONS = (
-    "A reader of this Sherlock Holmes story is looking for: {query}\n\n"
-    "Is paragraph_{n} one of the passages they are looking for?"
-)
-
-TRUE_CRITERIA = "This paragraph is part of what the reader asked for."
-
-FALSE_CRITERIA = "This paragraph is not what the reader asked for."
-
 _TEXT = (Path(__file__).resolve().parent / "silver_blaze.txt").read_text(
     encoding="utf-8")
 
@@ -67,10 +58,19 @@ def judge(client: TypeSafeClient, chunk: range, query: str) -> tuple:
         state={f"paragraph_{n}": PARAGRAPHS[i]
                for n, i in enumerate(chunk)},
         questions={f"q{n}": Noul(
-            instructions=INSTRUCTIONS.format(query=query, n=n),
-            criteria={"true": TRUE_CRITERIA, "false": FALSE_CRITERIA},
+            instructions=(
+                "A reader of this Sherlock Holmes story is looking for: "
+                f"{query}\n\n"
+                f"Is paragraph_{n} one of the passages they are looking "
+                "for?"),
+            criteria={
+                "true": "This paragraph is part of what the reader asked "
+                        "for.",
+                "false": "This paragraph is not what the reader asked "
+                         "for.",
+            },
         ) for n, i in enumerate(chunk)},
-        model=MODEL,
+        model="jev-latest",
     )
     assert len(response.answers) == len(chunk), len(response.answers)
     results = []

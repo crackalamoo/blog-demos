@@ -21,17 +21,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
 
-from .questions import (
-    ACTION_CRITERIA,
-    ACTION_INSTRUCTIONS,
-    ACTION_LABELS,
-    MISLEADING_CRITERIA,
-    MISLEADING_INSTRUCTIONS,
-    MISLEADING_RUNGS,
-    SUMMARY_CRITERIA,
-    SUMMARY_INSTRUCTIONS,
-)
-
 SLUG = "wiki"
 TITLE = "Reading every Wikipedia edit, live"
 STATIC = Path(__file__).resolve().parent / "static"
@@ -202,74 +191,121 @@ def state_of(event: dict, diff: dict) -> dict:
     }
 
 
-def judge_action(client: TypeSafeClient, state: dict) -> tuple:
-    """One edit, one question, one ``Choice`` over the seven labels."""
+def ask(client: TypeSafeClient, edit: dict) -> tuple:
     response = client.system_one(
-        state=state,
-        questions={"action": Choice(
-            instructions=ACTION_INSTRUCTIONS,
-            criteria=ACTION_CRITERIA,
-        )},
-        model=MODEL,
+        state={
+            "about": (
+                "A single edit to an English Wikipedia article: the "
+                "article title, the editor's name, the edit summary they "
+                "wrote, the change in article size in bytes, and the "
+                "wikitext that the edit added and removed. Judge the edit "
+                "itself, from the added and removed text. The edit "
+                "summary is the editor's own claim about the edit and may "
+                "be wrong, empty, or misleading."),
+            "edit": edit,
+        },
+        questions={
+            "action": Choice(
+                instructions=(
+                    "What is this edit doing? Choose the single label that "
+                    "best describes the edit's dominant effect on the "
+                    "article."),
+                criteria={
+                    "vandalism": (
+                        "The edit damages the article on purpose: obscenity, "
+                        "insults, nonsense, blanking without reason, joke "
+                        "claims, or replacing real content with junk."),
+                    "reverting damage": (
+                        "The edit undoes someone else's damage or unwanted "
+                        "change, restoring a previous version of the text."),
+                    "adding content": (
+                        "The edit adds substantive new prose or facts to the "
+                        "article beyond what was there."),
+                    "citation work": (
+                        "The edit is mainly about sources: adding, repairing, "
+                        "reformatting, or removing references and citation "
+                        "templates."),
+                    "copyedit": (
+                        "The edit changes wording, grammar, spelling, "
+                        "punctuation, or phrasing without changing what the "
+                        "article claims."),
+                    "metadata": (
+                        "The edit works on the article's apparatus rather "
+                        "than its prose: categories, infobox fields, links, "
+                        "templates, short descriptions, or formatting."),
+                    "other": "The edit fits none of the above labels.",
+                },
+            ),
+            "misleading": Score(
+                instructions=(
+                    "If this edit stood and a reader read the article "
+                    "afterwards, how misleading would the article be to them "
+                    "because of this edit? Rate the effect on the reader, not "
+                    "the editor's intent, and not whether the edit was an "
+                    "improvement in style."),
+                criteria=[
+                    "No effect on the reader. What the article tells a "
+                    "reader is unchanged, or the edit repairs the article.",
+                    "Cosmetic only. Wording, formatting, or apparatus "
+                    "changed; every claim the reader takes away is the same "
+                    "as before.",
+                    "Slightly misleading. A reader comes away with a shaded "
+                    "or imprecise impression: emphasis, hedging, or a detail "
+                    "lost.",
+                    "Materially wrong. A reader comes away believing "
+                    "something the sources do not support: a wrong figure, "
+                    "date, name, or claim.",
+                    "Outright false. A reader is told something flatly "
+                    "untrue, or the article's substance is destroyed.",
+                ],
+            ),
+            "summary_honest": Noul(
+                instructions=(
+                    "Does the edit summary honestly describe what the edit "
+                    "actually changed? Compare the summary against the added "
+                    "and removed text. An empty summary is not dishonest; a "
+                    "summary that describes a different change than the one "
+                    "made is."),
+                criteria={
+                    "true": (
+                        "The summary is an honest account of the edit: it "
+                        "describes the change that was actually made, or it "
+                        "is empty, or it is a section marker with nothing "
+                        "claimed."),
+                    "false": (
+                        "The summary misrepresents the edit: it claims a "
+                        "change that was not made, understates or disguises "
+                        "what was changed, or describes the edit as routine "
+                        "when it is not."),
+                },
+            ),
+        },
+        model="jev-latest",
     )
-    answer = response.answers["action"]
-    assert answer.type == "choice", answer.type
+    action = response.answers["action"]
+    assert action.type == "choice", action.type
+    misleading = response.answers["misleading"]
+    assert misleading.type == "score", misleading.type
+    summary = response.answers["summary_honest"]
+    assert summary.type == "noul", summary.type
     return {
-        "label": answer.choice,
-        "confidence": answer.confidence,
-        "probabilities": dict(answer.probabilities),
-    }, response.usage
-
-
-def judge_misleading(client: TypeSafeClient, state: dict) -> tuple:
-    """One edit, one question, one ``Score`` over the five rungs.
-
-    ``score`` is a probability-weighted mean and is passed through raw.
-    """
-    response = client.system_one(
-        state=state,
-        questions={"misleading": Score(
-            instructions=MISLEADING_INSTRUCTIONS,
-            criteria=MISLEADING_CRITERIA,
-        )},
-        model=MODEL,
-    )
-    answer = response.answers["misleading"]
-    assert answer.type == "score", answer.type
-    return {
-        "score": answer.score,
-        "confidence": answer.confidence,
+        "label": action.choice,
+        "confidence": action.confidence,
+        "probabilities": dict(action.probabilities),
+    }, {
+        "score": misleading.score,
+        "confidence": misleading.confidence,
         "probabilities": {str(k): v
-                          for k, v in answer.probabilities.items()},
-    }, response.usage
-
-
-def judge_summary_honest(client: TypeSafeClient, state: dict) -> tuple:
-    """One edit, one question, one ``Noul``; it carries no confidence."""
-    response = client.system_one(
-        state=state,
-        questions={"summary_honest": Noul(
-            instructions=SUMMARY_INSTRUCTIONS,
-            criteria=SUMMARY_CRITERIA,
-        )},
-        model=MODEL,
-    )
-    answer = response.answers["summary_honest"]
-    assert answer.type == "noul", answer.type
-    return {"p": answer.noul}, response.usage
+                          for k, v in misleading.probabilities.items()},
+    }, {"p": summary.noul}, response.usage
 
 
 def judge(client: TypeSafeClient, event: dict) -> dict | None:
-    """Three questions, three requests, one per question, in parallel."""
     diff = fetch_diff(event["revision"]["old"], event["revision"]["new"])
     if diff is None:
         return None
     state = state_of(event, diff)
-    with ThreadPoolExecutor(max_workers=3) as asking:
-        futures = [asking.submit(fn, client, state) for fn in
-                   (judge_action, judge_misleading, judge_summary_honest)]
-        (action, u_a), (misleading, u_m), (summary, u_s) = [
-            f.result() for f in futures]
+    action, misleading, summary, usage = ask(client, state)
     return {
         "id": event["id"],
         "title": state["title"],
@@ -282,10 +318,8 @@ def judge(client: TypeSafeClient, event: dict) -> dict | None:
         "action": action,
         "misleading": misleading,
         "summary_honest": summary,
-        "input_tokens": (u_a.input_tokens + u_m.input_tokens
-                         + u_s.input_tokens),
-        "output_tokens": (u_a.output_tokens + u_m.output_tokens
-                          + u_s.output_tokens),
+        "input_tokens": usage.input_tokens,
+        "output_tokens": usage.output_tokens,
     }
 
 
@@ -383,10 +417,6 @@ def _stream(req) -> None:
     req.begin_sse()
     req.event("meta", {
         "model": {"name": MODEL, "live": True},
-        "action_labels": ACTION_LABELS,
-        "action_criteria": ACTION_CRITERIA,
-        "misleading_rungs": MISLEADING_RUNGS,
-        "misleading_criteria": MISLEADING_CRITERIA,
     })
     reader.start()
 

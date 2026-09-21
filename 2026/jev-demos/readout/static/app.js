@@ -28,9 +28,63 @@ function fit() {
     '--zoom', String(box.clientWidth / DESIGN_WIDTH));
 }
 
+// Display names for the ten questions in questions.py, in order. Keys
+// are the function names; rungs and options are the Score's and
+// Choice's own, as Jev returns them.
+const QUESTIONS = [
+  {
+    key: 'usable_today', kind: 'noul',
+    label: 'Can you use this today?',
+  },
+  {
+    key: 'has_price', kind: 'noul',
+    label: 'Is there a price on the page?',
+  },
+  {
+    key: 'names_customer', kind: 'noul',
+    label: 'Does it name a real customer?',
+  },
+  {
+    key: 'says_what_it_does', kind: 'noul',
+    label: 'Does it say what it does?',
+  },
+  {
+    key: 'readiness', kind: 'score',
+    label: 'How ready is it, really?',
+    rungs: ['idea', 'prototype', 'private beta', 'shipping', 'mature'],
+  },
+  {
+    key: 'shipped_vs_roadmap', kind: 'score',
+    label: 'Shipped, or roadmap?',
+    rungs: ['all roadmap', 'mostly roadmap', 'half', 'mostly shipped',
+            'all shipped'],
+  },
+  {
+    key: 'concreteness', kind: 'score',
+    label: 'How concrete are the claims?',
+    rungs: ['adjectives', 'vague', 'mixed', 'specific', 'numbers'],
+  },
+  {
+    key: 'category', kind: 'choice',
+    label: 'What is this, actually?',
+    options: ['dev tool', 'consumer app', 'marketplace', 'consultancy',
+              'research project', 'other'],
+  },
+  {
+    key: 'omission', kind: 'choice',
+    label: 'What is most conspicuously missing?',
+    options: ['price', 'what it does', 'who built it', 'proof it works',
+              'nothing - the page is complete'],
+  },
+  {
+    key: 'coyness', kind: 'score',
+    label: 'How coy is the page?',
+    rungs: ['candid', 'reticent', 'evasive', 'coy', 'hiding'],
+  },
+];
+
 const state = {
   pages: [],
-  questions: [],
   at: 0,
   source: null,
   nodes: {},
@@ -147,7 +201,7 @@ function show(index) {
 
   el.rows.textContent = '';
   state.nodes = {};
-  for (const q of state.questions) buildRow(q);
+  for (const q of QUESTIONS) buildRow(q);
 
   const source = new EventSource(
     BASE + 'api/read?page=' + encodeURIComponent(page.id));
@@ -177,8 +231,7 @@ fetch(BASE + 'api/pages')
   .then((r) => r.json())
   .then((data) => {
     state.pages = data.pages;
-    state.questions = data.questions;
     el.model.textContent = 'model ' + data.model.name;
-    el.qcount.textContent = data.questions.length + ' judgments per page';
+    el.qcount.textContent = QUESTIONS.length + ' judgments per page';
     show(0);
   });

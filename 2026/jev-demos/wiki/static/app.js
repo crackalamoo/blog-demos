@@ -37,9 +37,12 @@ const el = {
 };
 
 const state = {
-  labels: [],
-  rungs: [],
-  criteria: {},
+  // The Choice's option keys, in routes.judge_action order.
+  labels: ['vandalism', 'reverting damage', 'adding content',
+           'citation work', 'copyedit', 'metadata', 'other'],
+  // Short names for the Score's five rungs in routes.judge_misleading.
+  rungs: ['no effect on the reader', 'cosmetic only',
+          'slightly misleading', 'materially wrong', 'outright false'],
   edits: new Map(),
   order: [],
   columns: [],
@@ -124,9 +127,6 @@ function drawAxes() {
       fill: colorOf(label),
     });
     name.textContent = label;
-    const title = svg('title', {});
-    title.textContent = state.criteria[label] || '';
-    name.appendChild(title);
     axes.appendChild(name);
 
     const count = svg('text', {
@@ -560,9 +560,6 @@ const source = new EventSource(`${BASE}api/stream?sid=${SID}`);
 
 source.addEventListener('meta', (ev) => {
   const meta = JSON.parse(ev.data);
-  state.labels = meta.action_labels;
-  state.rungs = meta.misleading_rungs;
-  state.criteria = meta.action_criteria;
   state.columns = state.labels.map(() => []);
   relayout();
 });

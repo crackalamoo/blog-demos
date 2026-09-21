@@ -132,7 +132,7 @@ class LiveJev:
                 instructions="Choose the reply you want to give.",
                 criteria=labels,
             )},
-            model=JEV_MODEL,
+            model="jev-latest",
         )
         answer = response.answers["reply"]
         assert answer.type == "choice", answer.type

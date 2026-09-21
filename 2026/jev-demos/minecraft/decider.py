@@ -27,13 +27,6 @@ load_dotenv()
 JEV_MODEL = "jev-latest"
 CHAT_MODEL = "gpt-5.6-luna"
 
-#: One decision is one question.  Batching collapses the accuracy.
-ACTION_INSTRUCTIONS = (
-    "You are playing this Minecraft character. The state is everything it "
-    "can see right now. Each option is an action the game will let it take "
-    "this instant. Choose the one to take now."
-)
-
 #: The API's ceiling on options in a single Choice.
 MAX_CRITERIA = 255
 
@@ -201,10 +194,14 @@ def choose_action(
     response = _jev().system_one(
         state=state,
         questions={"action": Choice(
-            instructions=ACTION_INSTRUCTIONS,
+            instructions=(
+                "You are playing this Minecraft character. The state is "
+                "everything it can see right now. Each option is an "
+                "action the game will let it take this instant. Choose "
+                "the one to take now."),
             criteria=criteria,
         )},
-        model=JEV_MODEL,
+        model="jev-latest",
     )
     answer = response.answers["action"]
     assert answer.type == "choice", answer.type
