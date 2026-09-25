@@ -245,8 +245,7 @@ def scores(get):
         sim[fold_mask(k)] = get(k)[fold_mask(k)]
     per_fold_dry = [nse(pos(get(k)[DRY]), obs[DRY]) for k in range(5)]
     ens_dry = np.mean([get(k) for k in range(5)], 0)
-    return dict(neg_pct=100 * float(np.mean(sim[ORD] < 0)),  # held-out days < 0 before clipping
-                nse=nse(pos(sim[ORD]), obs[ORD]), lognse=log_nse(pos(sim[ORD]), obs[ORD]),
+    return dict(nse=nse(pos(sim[ORD]), obs[ORD]), lognse=log_nse(pos(sim[ORD]), obs[ORD]),
                 late=late_ratio(sim), drought_mean=float(np.mean(per_fold_dry)),
                 drought_ens=nse(pos(ens_dry[DRY]), obs[DRY]), drought_folds=per_fold_dry,
                 heldout_folds=[nse(pos(get(k)[fold_mask(k)]), obs[fold_mask(k)]) for k in range(5)])
@@ -277,7 +276,7 @@ def report(seeds):
 
     rows = [('nse', 'pooled held-out NSE'), ('drought_mean', 'drought NSE, mean of 5 folds'),
             ('drought_ens', 'drought NSE, 5-fold ensemble'), ('lognse', 'pooled held-out log-NSE'),
-            ('late', 'Aug-Sep model/obs median'), ('neg_pct', '% held-out days < 0 (unclipped)')]
+            ('late', 'Aug-Sep model/obs median')]
     print(f'\n{"":32s}{"N":>4s} {"physics":>9s} {"LSTM ens":>9s}  {"LSTM per-seed mean [min..max]":>30s}  {"phys-LSTMens":>12s}')
     for key, label in rows:
         for n in SIZES[::-1]:

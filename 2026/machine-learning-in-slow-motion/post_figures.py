@@ -100,7 +100,7 @@ def abc(ax, x, runs, sel):
         ax.plot(x, q[sel], color=SETS[k], lw=1.6, label=SET_LABELS[k])
 
 
-# ------------------------------------------------------------------ figure 1
+# ------------------------------------------------------------------ blackwood-weather-and-flow
 # The problem, before any model: the inputs and the target over three water years.
 y = d[(d.wy >= DATA_WYS[0]) & (d.wy <= DATA_WYS[1])]
 fig, (a0, a1, a2) = plt.subplots(3, 1, figsize=(W, 5.4), sharex=True,
@@ -120,15 +120,20 @@ a0.set_title('Blackwood Creek: predict creek flow from weather')
 a2.text(0, -0.5, f'Water years {DATA_WYS[0]}–{DATA_WYS[1]} (Oct {DATA_WYS[0] - 1} – Sep {DATA_WYS[1]}).\n'
         'Precipitation and temperature are Daymet basin averages; flow is the USGS gauge.',
         transform=a2.transAxes, color=MUTED, fontsize=9)
-save(fig, 'fig1')
+save(fig, 'blackwood-weather-and-flow')
 
-# ------------------------------------------------------------------ figure 2a-d
-# One figure per stage, on the same axes, so each can sit next to its equation.
-LABELS = ['One bucket', 'Add snow', 'Add fast and slow groundwater', 'Add soil and evaporation']
-sims = [fn(*[d[c].values for c in inputs], *[calib[stage]['params'][p[0]] for p in params])
-        for stage, fn, inputs, params in STAGES]
+# ------------------------------------------------------------------ model steps
+# One figure per step the post takes, on the same axes, so each can sit next to its equation.
+# The post goes from snow straight to the full model; the two stores alone (calibrate.py's
+# stage 3) barely help, so they get no figure. Files keep their letters until renumbering.
+SHOWN = [('1: bucket', 'One bucket', 'model-step-1-bucket'), ('2: + snow', 'Add snow', 'model-step-2-snow'),
+         ('4: + soil', 'Add groundwater, soil and evaporation', 'model-step-3-full')]
+by_stage = {stage: (fn, inputs, params) for stage, fn, inputs, params in STAGES}
+sims = [(lambda fn, inputs, params: fn(*[d[c].values for c in inputs],
+                                        *[calib[stage]['params'][p[0]] for p in params]))(*by_stage[stage])
+        for stage, _, _ in SHOWN]
 ymax = 1.05 * max(obs[wy].max(), *(s[wy].max() for s in sims))
-for i, ((stage, *_), label, sim) in enumerate(zip(STAGES, LABELS, sims)):
+for i, ((stage, label, name), sim) in enumerate(zip(SHOWN, sims)):
     fig, a = plt.subplots(figsize=(W, 2.9))
     a.plot(dates, obs[wy], color=INK, lw=1.3, label='observed')
     a.plot(dates, sim[wy], color=MODEL, lw=1.3, label='model')
@@ -136,15 +141,15 @@ for i, ((stage, *_), label, sim) in enumerate(zip(STAGES, LABELS, sims)):
     a.set_ylabel('flow (mm/day)')
     month_axis(a)
     a.legend(loc='upper left', fontsize=9)
-    a.set_title(f'Stage {stage[0]}: {label.lower()}')
+    a.set_title(f'Step {i + 1}: {label.lower()}')
     a.text(0.98, 0.94, f'NSE {calib[stage]["nse"]:.2f}', transform=a.transAxes, ha='right', va='top',
            color=INK, fontsize=11)
     a.text(0, -0.3, f'Blackwood Creek, water year {WY}.\nNSE is scored on all ordinary (non-drought) years '
            '1981–2011; 1 is a perfect fit.', transform=a.transAxes, color=MUTED, fontsize=9)
-    save(fig, f'fig2{"abcd"[i]}')
+    save(fig, name)
 
 
-# ------------------------------------------------------------------ figure 3
+# ------------------------------------------------------------------ near-equal-fits
 # Rows in the order the post introduces them, with the post's symbols. Each row also gets a
 # strip: where each set's value sits within the range sampled (half-lives on a log scale).
 def linear(n):
@@ -218,9 +223,9 @@ for r, (_, _, pos) in enumerate(ROWS, start=1):
         fig.add_artist(plt.Line2D([x0 + pos(x) * (x1 - x0)], [yc + (1 - j) * 0.18 * bb.height], marker='o',
                                   ms=5.5, color=SETS[k], markeredgecolor=SURFACE, markeredgewidth=0.8, lw=0,
                                   transform=fig.transFigure))
-save(fig, 'fig3')
+save(fig, 'near-equal-fits')
 
-# ------------------------------------------------------------------ figure 3c
+# ------------------------------------------------------------------ loss-surface
 # NSE over the plane through A and C: one axis is the straight line from A to C, which lies
 # close to the Hessian's sloppiest direction; the other is the Hessian's stiffest direction
 # (hessian.py). The line on the surface and floor is where NSE is 0.01 below A.
@@ -232,7 +237,7 @@ toward_c = dc / np.linalg.norm(dc)
 stiff = V[:, -1] - (V[:, -1] @ toward_c) * toward_c  # made exactly perpendicular to the A-C line
 stiff /= np.linalg.norm(stiff)
 angle = np.degrees(np.arccos(abs(toward_c @ V[:, 0])))
-print(f'fig3c: the A-C line is {angle:.0f} degrees from the sloppiest direction')
+print(f'loss-surface: the A-C line is {angle:.0f} degrees from the sloppiest direction')
 
 
 def reach(v):
@@ -293,8 +298,8 @@ fig.text(0.1, -0.1, 'Surface: NSE from running the model at each point. The A-to
          f'{angle:.0f}° of the Hessian\'s sloppiest\ndirection; the stiffest direction is in rescaled parameter '
          'units. Percentages: how much of each direction is each\nparameter (its squared component). On the floor: '
          'the same NSE seen from above. Black lines: where NSE is\n0.01 below A.', color=MUTED, fontsize=9)
-save(fig, 'fig3c', 'png')
-print(f'fig3c: eigenvalues {lam[-1]:.3g} (stiff) to {lam[0]:.3g} (sloppy)')
+save(fig, 'loss-surface', 'png')
+print(f'loss-surface: eigenvalues {lam[-1]:.3g} (stiff) to {lam[0]:.3g} (sloppy)')
 
 # ------------------------------------------------------------------ train vs test (no figure)
 # For the prose: the full model's NSE on the years it was trained on vs the years it was
@@ -326,7 +331,7 @@ print(f'drought years: trained on the 25 ordinary years {split_nse("4: + soil", 
 # For the prose: the same model trained on the drought years themselves
 print(f'Trained on drought years: NSE {split_nse("drought", DROUGHT):.3f} on them')
 
-# ------------------------------------------------------------------ figure 5
+# ------------------------------------------------------------------ late-summer-flow
 # Left: the whole year, where A, B and C overlap. Right: late summer on a log scale,
 # where they come apart.
 summer = wy & d.index.month.isin([7, 8, 9])
@@ -368,14 +373,14 @@ for k, y_ in zip(order, ys):
     a1.text(sd[-1] + pd.Timedelta(days=3), 10 ** y_, f'{ends[k]:.2f}' + (' observed' if k == 'obs' else ''),
             va='center', fontsize=8.5, color=INK if k == 'obs' else SETS[k])
 for k in picks:
-    print(f'fig5: set {k} on {sd[-1].date()}: {ends[k]:.3f} ({ends["obs"] / ends[k]:.1f}x below observed)')
+    print(f'late-summer-flow: set {k} on {sd[-1].date()}: {ends[k]:.3f} ({ends["obs"] / ends[k]:.1f}x below observed)')
 fig.suptitle('NSE and late-summer flow of sets A, B and C', x=0.012, ha='left', fontsize=12, fontweight='bold', y=1.07)
 a0.legend(loc='upper center', bbox_to_anchor=(0.9, -0.14), ncol=4, fontsize=9, handlelength=1.5, columnspacing=1.2)
 fig.text(0.012, -0.17, f'Blackwood Creek, water year {WY}. NSE is over all ordinary years 1981–2011.',
          color=MUTED, fontsize=9)
-save(fig, 'fig5')
+save(fig, 'late-summer-flow')
 
-# ------------------------------------------------------------------ figure 5b
+# ------------------------------------------------------------------ error-by-month
 # Where the best fit's NSE error comes from, month by month, vs how wrong it is each month
 best = sims[-1]
 months = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # water-year order
@@ -404,9 +409,9 @@ e2.text(0, -0.32, f'Set A, the best fit (NSE {calib["4: + soil"]["nse"]:.2f}), o
         f'August and September (dark): {late_share:.1f}% of the error.\n'
         'Error share: squared errors, as NSE counts them. Typical error: median of |model − observed| / observed.',
         transform=e2.transAxes, color=MUTED, fontsize=9)
-save(fig, 'fig5b')
+save(fig, 'error-by-month')
 
-# ------------------------------------------------------------------ figure 6
+# ------------------------------------------------------------------ physics-vs-transformer
 # Physics model vs a transformer by years of training data (learning_curve.py). Same folds
 # as crossval.py: 5-fold cross-validation in 5-year blocks for ordinary years; drought years are a
 # test set never used for training. The transformer's line is its 3-seed ensemble (the
@@ -414,10 +419,9 @@ save(fig, 'fig5b')
 lc = json.load(open(f'data/learning_curve_{BLACKWOOD}/summary.json'))['results']
 sizes = sorted(int(n) for n in lc)
 ML = '#6a51a3'
-panels = [('nse', 'Ordinary years\n(cross-validation)', 'NSE'),
-          ('drought_mean', 'Drought years\n(test set)', 'NSE'),
-          ('neg_pct', 'Negative predicted\nflow', '% of test days')]
-fig, axs = plt.subplots(1, 3, figsize=(W, 2.9), gridspec_kw=dict(wspace=0.42))
+panels = [('nse', 'Ordinary years (cross-validation)', 'NSE'),
+          ('drought_mean', 'Drought years (test set)', 'NSE')]
+fig, axs = plt.subplots(1, 2, figsize=(W, 3.1), gridspec_kw=dict(wspace=0.3))
 for a, (key, title, ylab) in zip(axs, panels):
     phys = [lc[str(n)]['physics'][key] for n in sizes]
     wide = [lc[str(n)]['physics_wide'][key] for n in sizes]
@@ -430,22 +434,21 @@ for a, (key, title, ylab) in zip(axs, panels):
     a.plot(x + 0.06, ens, color=ML, lw=1.8, marker='o', ms=5, label='transformer')
     a.plot(x - 0.06, phys, color=MODEL, lw=1.8, marker='o', ms=5, label='physics model')
     a.plot(x - 0.06, wide, color=MODEL, lw=1.4, ls=(0, (3, 2)), marker='o', ms=4, mfc=SURFACE,
-           label='physics model,\nleak range loosened')
+           label='physics model, leak range loosened')
     a.set_xticks(x, [str(n) for n in sizes])
     a.set_xlim(-0.4, len(sizes) - 0.6)
     a.set_xlabel('years of training data')
     a.set_ylabel(ylab)
     a.set_title(title, fontsize=10.5)
     a.grid(axis='x', visible=False)
-    print(f'fig6 {key}: physics {np.round(phys, 3)}, loosened {np.round(wide, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
-axs[2].set_ylim(bottom=-1)
-axs[2].legend(*axs[0].get_legend_handles_labels(), loc='center', bbox_to_anchor=(0.5, 0.36),
-              fontsize=8.5)  # the empty band between the two lines
+    print(f'physics-vs-transformer {key}: physics {np.round(phys, 3)}, loosened {np.round(wide, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
+fig.legend(*axs[0].get_legend_handles_labels(), loc='upper center', bbox_to_anchor=(0.5, -0.03), ncol=3,
+           fontsize=9, handlelength=1.8, columnspacing=1.4)
 fig.suptitle('Physics model vs transformer, by years of training data', x=0.012, ha='left', fontsize=12,
-             fontweight='bold', y=1.12)
-fig.text(0.012, -0.2, 'Blackwood Creek. Ordinary years: 5-fold cross-validation in blocks of 5 consecutive years. '
-         'Drought:\n1987–1992 and 2012–2014, never used for training (mean over the 5 fits). '
-         'Transformer: line = average of 3 trained\nnetworks, faint dots = each one alone. Negative predictions '
-         'are set to 0 before scoring. Leak range loosened: 0–20 mm/day instead of 0–3.',
+             fontweight='bold', y=1.08)
+fig.text(0.012, -0.36, 'Blackwood Creek. Both models are fit to maximize NSE. Ordinary years: 5-fold cross-validation in '
+         'blocks of 5\nconsecutive years. Drought: 1987–1992 and 2012–2014, never used for training (mean over the 5 fits). '
+         'Transformer:\nline = average of 3 trained networks, faint dots = each one alone. Negative predictions are set to 0 '
+         'before scoring.\nLeak range loosened: 0–20 mm/day instead of 0–3.',
          color=MUTED, fontsize=9)
-save(fig, 'fig6')
+save(fig, 'physics-vs-transformer')
