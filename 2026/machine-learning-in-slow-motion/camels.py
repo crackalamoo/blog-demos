@@ -15,10 +15,20 @@ def gauge_arg(default=BLACKWOOD):
     return sys.argv[1] if len(sys.argv) > 1 else default
 
 
-def calibration_years(d):
-    """Mask for calibration: every full non-drought water year with observed flow.
-    WY 1980 is a partial year and serves as model warm-up."""
-    return (d.wy >= 1981).values & ~d.wy.isin(DROUGHT_WYS).values & d.q.notna().values
+def full_years(d):
+    """Mask for the water years with a full year of observed flow. This drops the partial
+    first year (WY 1980, which serves as model warm-up) and last (WY 2015)."""
+    return d.groupby('wy').q.transform('count').values >= 365
+
+
+def ordinary_years(d):
+    """Mask for every full non-drought water year: 1981-1986 and 1993-2011."""
+    return full_years(d) & ~d.wy.isin(DROUGHT_WYS).values
+
+
+def drought_years(d):
+    """Mask for the drought water years."""
+    return full_years(d) & d.wy.isin(DROUGHT_WYS).values
 
 
 def load(gauge=BLACKWOOD):
