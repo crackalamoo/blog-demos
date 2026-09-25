@@ -257,7 +257,7 @@ fig.text(0.012, -0.15, f'Dark points: the {good.sum():,} good fits (NSE above {T
 fig.tight_layout()
 save(fig, 'fig3b')
 
-# ------------------------------------------------------------------ figure 4 and 4b
+# ------------------------------------------------------------------ figure 4
 # Train/test splits (calibrate.py). Each row is one fit: its NSE on the years it was trained
 # on (filled) and on the years it was tested on (open).
 def train_test(rows, title, note, name):
@@ -269,8 +269,9 @@ def train_test(rows, title, note, name):
         s.plot(test, y_, marker='o', ms=9, color=SURFACE, markeredgecolor=INK, markeredgewidth=1.8, lw=0,
                zorder=2)
         left, right = (test, train) if test < train else (train, test)
-        s.text(right + 0.012, y_, f'{right:.2f}', ha='left', va='center', color=INK2, fontsize=9.5)
-        s.text(left - 0.012, y_, f'{left:.2f}', ha='right', va='center', color=INK2, fontsize=9.5)
+        for v, dx, ha in [(right, 9, 'left'), (left, -9, 'right')]:  # a fixed gap in points from each dot
+            s.annotate(f'{v:.2f}', (v, y_), xytext=(dx, 0), textcoords='offset points', ha=ha, va='center',
+                       color=INK2, fontsize=9.5)
         s.text((train + test) / 2, y_ + 0.12, f'{test - train:+.2f}'.replace('-', '−'), ha='center',
                va='bottom', color=MUTED, fontsize=9)
         if row == 0:  # label the two kinds of dot once, on the top row
@@ -279,7 +280,7 @@ def train_test(rows, title, note, name):
         print(f'{name}: {label.replace(chr(10), " ")}: train {train:.3f}, test {test:.3f}')
     s.set_yticks(range(len(rows))[::-1], [label for label, _, _ in rows])
     s.set_ylim(-0.5, len(rows) - 0.25)
-    s.set_xlim(0.3, 0.8)
+    s.set_xlim(0.45, 0.72)
     s.set_xlabel('NSE')
     s.grid(axis='y', visible=False)
     s.spines['left'].set_visible(False)
@@ -308,22 +309,16 @@ def pooled(scheme):
     return np.mean([r['nse_train'] for r in folds]), nse(sim[ORD], obs[ORD])
 
 
-last = next(r for r in cv if r['scheme'] == 'blocked' and r['test_wys'][-1] == 2011)
-train_test([('test years: every 5th year', *pooled('interleaved')),
-            ('test years: 5-year blocks', *pooled('blocked')),
-            (f'test years: {last["test_wys"][0]}–{last["test_wys"][-1]},\nthe last and driest block',
-             last['nse_train'], last['nse_test'])],
-           'NSE on the training years vs. the test years',
-           'Full model, Blackwood Creek. Each fit is trained on 20 of the 25 ordinary years and tested on the other 5.\n'
-           'Top two rows: five fits each, so every year is tested once. Bottom row: one of the five block fits.',
-           'fig4')
 DROUGHT = drought_years(d)
-train_test([('trained on ordinary years,\ntested on drought years', split_nse('4: + soil', ORD),
-             split_nse('4: + soil', DROUGHT)),
-            ('trained on drought years,\ntested on ordinary years', split_nse('drought', DROUGHT),
-             split_nse('drought', ORD))],
-           'NSE on ordinary years vs. drought years',
-           'Blackwood Creek. Ordinary years: 1981–1986, 1993–2011. Drought years: 1987–1992, 2012–2014.', 'fig4b')
+train_test([('test years: 5-year blocks', *pooled('blocked')),
+            ('test years: drought years', split_nse('4: + soil', ORD), split_nse('4: + soil', DROUGHT))],
+           'NSE on the training years vs. the test years',
+           'Full model, Blackwood Creek. No fit is trained on drought years. Top row: five fits, each trained on 20\n'
+           'of the 25 ordinary years and tested on the other 5 consecutive years, so every year is tested once.\n'
+           'Bottom row: the fit trained on all 25 ordinary years, tested on the drought years 1987–1992 and 2012–2014.',
+           'fig4')
+# For the prose: the same model trained on the drought years themselves
+print(f'Trained on drought years: NSE {split_nse("drought", DROUGHT):.3f} on them')
 
 # ------------------------------------------------------------------ figure 5
 # Left: the whole year, where A, B and C overlap. Right: late summer on a log scale,
@@ -405,25 +400,10 @@ e2.text(0, -0.32, f'Set A, the best fit (NSE {calib["4: + soil"]["nse"]:.2f}), o
         transform=e2.transAxes, color=MUTED, fontsize=9)
 save(fig, 'fig5b')
 
-# ------------------------------------------------------------------ figure 6
+# ------------------------------------------------------------------ temperature artifact (no figure)
+# For the prose: winter night temperatures at the Ward Creek SNOTEL station, and in the model's
+# own Daymet input, jump against the Tahoe City cooperative station around the 2004 sensor change.
 coop = pd.read_csv('data/coop_USC00048758.csv', parse_dates=['DATE']).set_index('DATE')
-diff = (winter_mean(snotel_tmin('848')) - winter_mean(coop.TMIN)).dropna()
-before, after = diff.loc[:2003], diff.loc[2004:]
-fig, a = plt.subplots(figsize=(W, 3.2))
-a.plot(diff.index, diff.values, color=TEMP, lw=1.6, marker='o', ms=4, markeredgecolor=SURFACE, markeredgewidth=1)
-for part in (before, after):
-    a.plot([part.index[0] - 0.4, part.index[-1] + 0.4], [part.mean()] * 2, color=MUTED, lw=1)
-signed = lambda v: f'{v:+.1f}'.replace('-', '−')
-a.text(1997.0, before.mean() + 0.1, f'average {signed(before.mean())} °C', color=INK2, fontsize=9, va='bottom')
-a.text(2008.0, after.mean() - 0.1, f'average {signed(after.mean())} °C', color=INK2, fontsize=9, va='top')
-a.text(2004.3, -1.1, f'change {signed(after.mean() - before.mean())} °C', color=INK, fontsize=9.5, va='center')
-a.axhline(0, color=MUTED, lw=0.8)
-a.set_ylabel('difference (°C)')
-a.set_title('Winter night temperature at Ward Creek minus Tahoe City')
-a.text(0, -0.24, 'Mean December–March daily minimum, by water year.\n'
-       'Ward Creek #3 is a SNOTEL station; Tahoe City is a NOAA cooperative station.', transform=a.transAxes, color=MUTED, fontsize=9)
-save(fig, 'fig6')
-print('step', f'{after.mean() - before.mean():+.2f} °C')
-# The same comparison for the model's own input: Daymet over Blackwood minus Tahoe City
-dm = (winter_mean(d.tmin) - winter_mean(coop.TMIN)).dropna()
-print(f'Daymet minus Tahoe City: step {dm.loc[2004:].mean() - dm.loc[:2003].mean():+.2f} °C at 2004')
+for label, series in [('Ward Creek SNOTEL', snotel_tmin('848')), ('Daymet over Blackwood', d.tmin)]:
+    diff = (winter_mean(series) - winter_mean(coop.TMIN)).dropna()
+    print(f'{label} minus Tahoe City, Dec-Mar Tmin: step {diff.loc[2004:].mean() - diff.loc[:2003].mean():+.2f} °C at 2004')
