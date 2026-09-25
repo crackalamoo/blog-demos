@@ -431,3 +431,6 @@ a.text(0, -0.24, 'Mean December–March daily minimum, by water year.\n'
        'Ward Creek #3 is a SNOTEL station; Tahoe City is a NOAA cooperative station.', transform=a.transAxes, color=MUTED, fontsize=9)
 save(fig, 'fig6')
 print('step', f'{after.mean() - before.mean():+.2f} °C')
+# The same comparison for the model's own input: Daymet over Blackwood minus Tahoe City
+dm = (winter_mean(d.tmin) - winter_mean(coop.TMIN)).dropna()
+print(f'Daymet minus Tahoe City: step {dm.loc[2004:].mean() - dm.loc[:2003].mean():+.2f} °C at 2004')
