@@ -87,7 +87,6 @@ def run(df, x):
 
 Qb = {k: run(d, x) for k, x in picks.items()}
 Qg = {k: run(g, x) for k, x in picks.items()}
-band_b = np.array([run(d, x) for x in Xg])
 nse_b = {k: nse(q[ORD], obs[ORD]) for k, q in Qb.items()}
 nse_g = {k: nse(q[GORD], gobs[GORD]) for k, q in Qg.items()}
 for k, x in picks.items():
@@ -96,11 +95,6 @@ for k, x in picks.items():
 
 wy = (d.wy == WY).values
 dates = d.index[wy]
-
-
-def ensemble(ax, x, band, sel, label=True):
-    ax.fill_between(x, np.percentile(band[:, sel], 5, 0), np.percentile(band[:, sel], 95, 0),
-                    color=BAND, lw=0, label=f'middle 90% of the {len(band):,} good fits' if label else None)
 
 
 SET_LABELS = {'A': 'set A (best fit)', 'B': 'set B', 'C': 'set C'}
@@ -183,7 +177,6 @@ ROWS = [(r'Melt threshold $T_{\mathrm{melt}}$ (°C)', lambda x: f'{x[col["TT"]]:
 fig = plt.figure(figsize=(W, 6.4))
 gs = fig.add_gridspec(2, 1, height_ratios=[1.25, 1], hspace=0.4)
 a = fig.add_subplot(gs[0])
-ensemble(a, dates, band_b, wy)
 abc(a, dates, Qb, wy)
 a.plot(dates, obs[wy], color=INK, lw=1.3, label='observed')
 a.set_ylabel('flow (mm/day)')

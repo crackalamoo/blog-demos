@@ -36,16 +36,45 @@ results['4: + soil, log-flow objective'] = calibrate(*FULL, objective=log_nse)
 # The full model fit on the drought years instead
 results['drought'] = calibrate(*FULL, mask=drought_years(d))
 
-# Set A is the best fit ('4: + soil'). Sets B and C are the best fits under one restriction
-# each: B's slow store has at least twice A's half-life, C's soil at most half A's capacity.
-# The slow store keeps 1 - K2 of its water a day, so doubling the half-life means keeping
-# the square root of that.
-A = results['4: + soil']['params']
-bounds = {n: (lo, hi) for n, lo, hi in full_params}
-restrict = {'set B': {'K2': (bounds['K2'][0], 1 - np.sqrt(1 - A['K2']))},
-            'set C': {'FC': (bounds['FC'][0], A['FC'] / 2)}}
-for name, over in restrict.items():
-    results[name] = calibrate(*FULL, bounds=list({**bounds, **over}.values()))
+# Set A is the best fit ('4: + soil'). Sets B and C score within NEAR of A and are as
+# different from it as possible: B is the set farthest from A, C the set farthest from
+# both A and B (maximizing the smaller of its two distances). Distance is Euclidean after
+# rescaling each parameter to 0-1 over its range, with the two stores' half-lives on a
+# log scale, so every parameter counts the same.
+NEAR = 0.01
+lo = np.array([p[1] for p in full_params])
+hi = np.array([p[2] for p in full_params])
+STORES = [j for j, p in enumerate(full_params) if p[0] in ('K1', 'K2')]
+
+
+def log_half_life(k):  # a store keeps 1 - k of its water a day
+    return np.log(np.log(2) / -np.log(1 - k))
+
+
+def unit(x):
+    u = (x - lo) / (hi - lo)
+    for j in STORES:
+        u[j] = (log_half_life(x[j]) - log_half_life(hi[j])) / (log_half_life(lo[j]) - log_half_life(hi[j]))
+    return u
+
+
+def farthest_from(refs, floor):
+    forcing = [d[c].values for c in full_inputs]
+    refs = [unit(r) for r in refs]
+
+    def loss(x):
+        shortfall = max(0.0, floor - nse(full_fn(*forcing, *x)[ORD], obs[ORD]))
+        return -min(np.linalg.norm(unit(x) - r) for r in refs) + 1000 * shortfall
+
+    fit = differential_evolution(loss, list(zip(lo, hi)), seed=0, tol=1e-8, maxiter=400, polish=False)
+    sim = full_fn(*forcing, *fit.x)
+    return fit.x, dict(params={p[0]: float(v) for p, v in zip(full_params, fit.x)}, nse=nse(sim[ORD], obs[ORD]))
+
+
+x_a = np.array(list(results['4: + soil']['params'].values()))
+floor = results['4: + soil']['nse'] - NEAR
+x_b, results['set B'] = farthest_from([x_a], floor)
+_, results['set C'] = farthest_from([x_a, x_b], floor)
 
 for name, r in results.items():
     print(name, {k: round(v, 3) for k, v in r['params'].items()},
