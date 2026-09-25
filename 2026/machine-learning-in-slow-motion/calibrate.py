@@ -5,7 +5,7 @@ import json
 import numpy as np
 from scipy.optimize import differential_evolution
 from camels import load, ordinary_years, drought_years, gauge_arg
-from model import STAGES, nse, log_nse
+from model import STAGES, FULL_LO, FULL_HI, nse, log_nse, to_unit
 
 GAUGE = gauge_arg()
 d, _ = load(GAUGE)
@@ -42,29 +42,16 @@ results['drought'] = calibrate(*FULL, mask=drought_years(d))
 # rescaling each parameter to 0-1 over its range, with the two stores' half-lives on a
 # log scale, so every parameter counts the same.
 NEAR = 0.01
-lo = np.array([p[1] for p in full_params])
-hi = np.array([p[2] for p in full_params])
-STORES = [j for j, p in enumerate(full_params) if p[0] in ('K1', 'K2')]
-
-
-def log_half_life(k):  # a store keeps 1 - k of its water a day
-    return np.log(np.log(2) / -np.log(1 - k))
-
-
-def unit(x):
-    u = (x - lo) / (hi - lo)
-    for j in STORES:
-        u[j] = (log_half_life(x[j]) - log_half_life(hi[j])) / (log_half_life(lo[j]) - log_half_life(hi[j]))
-    return u
+lo, hi = FULL_LO, FULL_HI
 
 
 def farthest_from(refs, floor):
     forcing = [d[c].values for c in full_inputs]
-    refs = [unit(r) for r in refs]
+    refs = [to_unit(r) for r in refs]
 
     def loss(x):
         shortfall = max(0.0, floor - nse(full_fn(*forcing, *x)[ORD], obs[ORD]))
-        return -min(np.linalg.norm(unit(x) - r) for r in refs) + 1000 * shortfall
+        return -min(np.linalg.norm(to_unit(x) - r) for r in refs) + 1000 * shortfall
 
     fit = differential_evolution(loss, list(zip(lo, hi)), seed=0, tol=1e-8, maxiter=400, polish=False)
     sim = full_fn(*forcing, *fit.x)

@@ -121,6 +121,36 @@ STAGES = [
 ]
 
 
+# Rescaled coordinates for the full model's parameters: each one mapped to 0-1 over its
+# range, with the two stores' rates as half-lives on a log scale (0 = fastest, 1 = slowest).
+# Distances and curvatures in these coordinates weigh every parameter the same.
+FULL_LO = np.array([p[1] for p in STAGES[-1][3]])
+FULL_HI = np.array([p[2] for p in STAGES[-1][3]])
+STORES = [j for j, p in enumerate(STAGES[-1][3]) if p[0] in ('K1', 'K2')]
+
+
+def log_half_life(k):
+    """Log of the days a store draining at k takes to halve; it keeps 1 - k of its water a day."""
+    return np.log(np.log(2) / -np.log(1 - k))
+
+
+def to_unit(x):
+    u = (np.asarray(x, float) - FULL_LO) / (FULL_HI - FULL_LO)
+    for j in STORES:
+        a, b = log_half_life(FULL_HI[j]), log_half_life(FULL_LO[j])
+        u[..., j] = (log_half_life(np.asarray(x, float)[..., j]) - a) / (b - a)
+    return u
+
+
+def from_unit(u):
+    u = np.asarray(u, float)
+    x = FULL_LO + u * (FULL_HI - FULL_LO)
+    for j in STORES:
+        a, b = log_half_life(FULL_HI[j]), log_half_life(FULL_LO[j])
+        x[..., j] = 1 - 0.5 ** (1 / np.exp(a + u[..., j] * (b - a)))
+    return x
+
+
 def nse(sim, obs):
     return 1 - np.sum((sim - obs) ** 2) / np.sum((obs - obs.mean()) ** 2)
 

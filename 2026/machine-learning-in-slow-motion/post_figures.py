@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.patches import ConnectionPatch
 from camels import load, ordinary_years, drought_years, snotel_tmin, winter_mean, BLACKWOOD, GENERAL
-from model import STAGES, full_model, groundwater_step, nse
+from model import STAGES, full_model, groundwater_step, nse, to_unit
 
 OUT = 'figures'
 os.makedirs(OUT, exist_ok=True)
@@ -37,12 +37,16 @@ plt.rcParams.update({
     'axes.grid': True, 'grid.color': GRID, 'grid.linewidth': 0.8, 'axes.axisbelow': True,
     'axes.spines.top': False, 'axes.spines.right': False,
     'legend.frameon': False, 'lines.linewidth': 1.6, 'lines.solid_capstyle': 'round',
+    'svg.fonttype': 'path', 'svg.hashsalt': 'blackwood',  # outlined text; stable ids between runs
 })
 W = 7.5  # inches; saved at 200 dpi -> 1500 px, shown at ~750 px
 
 
-def save(fig, name):
-    fig.savefig(f'{OUT}/{name}.png', dpi=200, bbox_inches='tight', pad_inches=0.15)
+def save(fig, name, fmt='svg'):
+    """SVG for line and bar charts; PNG for the dense scatter and the 3D surface, which would
+    make large, slow SVGs. SVG text is drawn as outlines so it looks the same everywhere."""
+    fig.savefig(f'{OUT}/{name}.{fmt}', dpi=200, bbox_inches='tight', pad_inches=0.15,
+                metadata={'Date': None} if fmt == 'svg' else None)
     plt.close(fig)
 
 
@@ -110,7 +114,7 @@ def abc(ax, x, runs, sel):
 y = d[(d.wy >= DATA_WYS[0]) & (d.wy <= DATA_WYS[1])]
 fig, (a0, a1, a2) = plt.subplots(3, 1, figsize=(W, 5.4), sharex=True,
                                  gridspec_kw=dict(height_ratios=[1, 0.8, 1.2], hspace=0.25))
-a0.bar(y.index, y.prcp, width=1, color=PRECIP)
+a0.bar(y.index, y.prcp, width=1, color=PRECIP, rasterized=True)  # ~1,100 bars: an image inside the SVG
 a0.set_ylabel('precipitation\n(mm/day)')
 a1.fill_between(y.index, y.tmin, y.tmax, color=TEMP_BAND, lw=0, label='daily low to high')
 a1.plot(y.index, y.tmean, color=TEMP, lw=0.8, label='daily mean')
@@ -255,7 +259,83 @@ fig.text(0.012, -0.15, f'Dark points: the {good.sum():,} good fits (NSE above {T
          f'Water capacity limit: the most water the soil can hold. '
          f'Red: the {100 * over:.0f}% of dark points above it.', color=MUTED, fontsize=9)
 fig.tight_layout()
-save(fig, 'fig3b')
+save(fig, 'fig3b', 'png')
+
+# ------------------------------------------------------------------ figure 3c
+# NSE over the plane through A and C: one axis is the straight line from A to C, which lies
+# close to the Hessian's sloppiest direction; the other is the Hessian's stiffest direction
+# (hessian.py). The line on the surface and floor is where NSE is 0.01 below A.
+import hessian as hs  # noqa: E402
+
+lam, V = np.linalg.eigh(hs.hessian(0.02))
+dc = (to_unit(picks['C']) - hs.uA)[hs.FREE]
+toward_c = dc / np.linalg.norm(dc)
+stiff = V[:, -1] - (V[:, -1] @ toward_c) * toward_c  # made exactly perpendicular to the A-C line
+stiff /= np.linalg.norm(stiff)
+angle = np.degrees(np.arccos(abs(toward_c @ V[:, 0])))
+print(f'fig3c: the A-C line is {angle:.0f} degrees from the sloppiest direction')
+
+
+def reach(v):
+    """How far one can move from A along v, each way, before a parameter leaves its range."""
+    u = hs.uA[hs.FREE]
+    ups = [((1 - u) / v)[v > 0], (-u / v)[v < 0]]
+    downs = [(u / v)[v > 0], ((u - 1) / v)[v < 0]]
+    return -np.min(np.concatenate(downs)), np.min(np.concatenate(ups))
+
+
+S1 = np.linspace(-0.1, 0.1, 61)         # rescaled units along the stiff direction
+S2 = np.linspace(*reach(toward_c), 81)  # along the A-C line, as far as the parameter ranges allow
+G1, G2 = np.meshgrid(S1, S2)
+U = np.repeat(hs.uA[None], G1.size, 0)
+U[:, hs.FREE] += np.outer(G1.ravel(), stiff) + np.outer(G2.ravel(), toward_c)
+Z = 1 - hs.loss(U).reshape(G1.shape)
+nse_a = 1 - hs.loss(hs.uA)[0]
+at_c = np.linalg.norm(dc)
+fig = plt.figure(figsize=(W, 5.2))
+ax = fig.add_subplot(projection='3d', computed_zorder=False)
+floor = Z.min() - 0.15
+ax.plot_surface(G1, G2, Z, cmap='viridis', vmin=floor, vmax=nse_a, rstride=1, cstride=1, lw=0.1,
+                edgecolor=(1, 1, 1, 0.25), antialiased=True, alpha=0.95, zorder=1)
+ax.contourf(G1, G2, Z, levels=12, zdir='z', offset=floor, cmap='viridis', vmin=floor, vmax=nse_a, alpha=0.5,
+            zorder=0)
+ax.contour(G1, G2, Z, levels=[nse_a - 0.01], zdir='z', offset=floor, colors=[INK], linewidths=1.3, zorder=0)
+ax.contour(G1, G2, Z, levels=[nse_a - 0.01], colors=[INK], linewidths=1.3, zorder=3)  # the same line on the surface
+for k, y_ in [('A', 0), ('C', at_c)]:
+    ax.scatter([0], [y_], [nse_b[k]], color=SETS[k], s=30, depthshade=False, zorder=5)
+    ax.text(0, y_, nse_b[k] + 0.03, k, color=SETS[k], fontsize=10, zorder=6)
+beta, cap = col['BETA'], col['FC']
+PLAIN = {'TT': 'melt threshold', 'CFMAX': 'melt factor', 'K1': 'fast store', 'K2': 'slow store',
+         'FC': 'soil capacity', 'BETA': 'runoff shape β'}
+
+
+def makeup(v):
+    """The two largest shares of a unit direction: its squared components, which sum to 1."""
+    top = sorted(zip(v**2, [names[j] for j in hs.FREE]), reverse=True)[:2]
+    return ', '.join(f'{100 * w:.0f}% {PLAIN[n]}' for w, n in top)
+
+
+ax.set_xlabel('stiffest direction:\n' + makeup(stiff).replace(', ', ',\n'), labelpad=10)
+ax.set_ylabel(f'from A to C: {makeup(toward_c)}\n(β {picks["A"][beta]:.1f} → {picks["C"][beta]:.1f}, '
+              f'capacity {picks["A"][cap]:.0f} → {picks["C"][cap]:.0f} mm)', labelpad=14)
+ax.set_zlabel('NSE', labelpad=6)
+ax.set_zlim(floor, nse_a + 0.02)
+ax.view_init(elev=30, azim=-32)
+ax.set_xticks([-0.1, 0, 0.1])
+ax.set_yticks([0, at_c], ['A', 'C'])
+ax.set_zticks([0.5, 0.55, 0.6, 0.65])
+ax.set_box_aspect((1, 1.6, 0.8))
+for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
+    axis.pane.set_facecolor(SURFACE)
+    axis.pane.set_edgecolor(GRID)
+    axis._axinfo['grid']['color'] = GRID
+ax.set_title('NSE around the best fit, toward C and in the stiffest direction', pad=0)
+fig.text(0.1, -0.1, 'Surface: NSE from running the model at each point. The A-to-C line is within '
+         f'{angle:.0f}° of the Hessian\'s sloppiest\ndirection; the stiffest direction is in rescaled parameter '
+         'units. Percentages: how much of each direction is each\nparameter (its squared component). On the floor: '
+         'the same NSE seen from above. Black lines: where NSE is\n0.01 below A.', color=MUTED, fontsize=9)
+save(fig, 'fig3c', 'png')
+print(f'fig3c: eigenvalues {lam[-1]:.3g} (stiff) to {lam[0]:.3g} (sloppy)')
 
 # ------------------------------------------------------------------ figure 4
 # Train/test splits (calibrate.py). Each row is one fit: its NSE on the years it was trained
