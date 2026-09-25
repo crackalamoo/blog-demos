@@ -1,11 +1,11 @@
-# Calibrate each stage on all 25 ordinary (non-drought) years. Also fits sets B and C and a
-# drought-years fit. Held-out scores come from crossval.py.
+# Calibrate each stage on all 25 ordinary (non-drought) years. Also fits sets B and C, a
+# drought-years fit and a fit with the leak's range loosened. Held-out scores come from crossval.py.
 # Usage: python calibrate.py [gauge_id]
 import json
 import numpy as np
 from scipy.optimize import differential_evolution
 from camels import load, ordinary_years, drought_years, gauge_arg
-from model import STAGES, FULL_LO, FULL_HI, nse, log_nse, to_unit
+from model import STAGES, WIDE_LEAK, FULL_LO, FULL_HI, nse, log_nse, to_unit
 
 GAUGE = gauge_arg()
 d, _ = load(GAUGE)
@@ -35,6 +35,8 @@ FULL = (full_fn, full_inputs, full_params)
 results['4: + soil, log-flow objective'] = calibrate(*FULL, objective=log_nse)
 # The full model fit on the drought years instead
 results['drought'] = calibrate(*FULL, mask=drought_years(d))
+# The full model with the leak allowed far past its usual range
+results['wide leak'] = calibrate(*FULL, bounds=[(lo, hi) for _, lo, hi in WIDE_LEAK])
 
 # Set A is the best fit ('4: + soil'). Sets B and C score within NEAR of A and are as
 # different from it as possible: B is the set farthest from A, C the set farthest from

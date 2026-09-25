@@ -1,5 +1,5 @@
 # The shape of the loss around the best fit (set A): its Hessian, and how far that local,
-# quadratic picture holds. Run after calibrate.py and montecarlo.py.
+# quadratic picture holds. Run after calibrate.py.
 #
 # The loss is L = 1 - NSE. Near A, L(A + d) ~ L(A) + g.d + 1/2 d.H.d, with d in the
 # rescaled coordinates of model.to_unit. The leak (PERC) and evaporation threshold (LP)

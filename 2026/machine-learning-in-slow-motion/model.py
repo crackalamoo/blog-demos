@@ -119,6 +119,9 @@ STAGES = [
     ('3: + two stores', snow_two_stores, ['prcp', 'tmean'], SNOW + GROUNDWATER),
     ('4: + soil', full_model, ['prcp', 'tmean', 'pet'], SNOW + GROUNDWATER + SOIL),
 ]
+# The full model's ranges with the leak loosened far past HBV-light's 3 mm/day. The fit
+# pushes against that bound; with this one it settles inside it.
+WIDE_LEAK = [(n, lo, 20 if n == 'PERC' else hi) for n, lo, hi in STAGES[-1][3]]
 
 
 # Rescaled coordinates for the full model's parameters: each one mapped to 0-1 over its

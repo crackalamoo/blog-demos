@@ -1,4 +1,4 @@
-# The figures that go in the post. Run after calibrate.py, montecarlo.py and crossval.py.
+# The figures that go in the post. Run after calibrate.py and crossval.py.
 # Every fit is trained on the 25 ordinary (non-drought) water years; held-out scores come
 # from cross-validation. Three parameter sets are followed through the figures: A, the
 # best fit, and B and C, which score almost as well but describe different basins.
@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.patches import ConnectionPatch
-from camels import load, ordinary_years, drought_years, snotel_tmin, winter_mean, BLACKWOOD, GENERAL
+from camels import load, ordinary_years, drought_years, BLACKWOOD
 from model import STAGES, full_model, groundwater_step, nse, to_unit
 
 OUT = 'figures'
@@ -65,18 +65,11 @@ def half_life(k):
 
 # ------------------------------------------------------------------ data and runs
 d, _ = load(BLACKWOOD)
-g, _ = load(GENERAL)
-obs, gobs = d.q.values, g.q.values
+obs = d.q.values
 ORD = ordinary_years(d)
-GORD = ordinary_years(g)  # same years as Blackwood
 forcing = lambda df: (df.prcp.values, df.tmean.values, df.pet.values)
 
-mc = np.load(f'data/{BLACKWOOD}_montecarlo.npz')
-names = list(mc['names'])
-# A random set is a "good fit" if it scores within 0.04 of the best of the million.
-THRESHOLD = mc['score'].max() - 0.04
-good = mc['score'] > THRESHOLD
-Xg, sg = mc['X'][good], mc['score'][good]
+names = [p[0] for p in STAGES[-1][3]]
 col = {n: j for j, n in enumerate(names)}
 
 calib = json.load(open(f'data/{BLACKWOOD}_calibration.json'))
@@ -90,12 +83,10 @@ def run(df, x):
 
 
 Qb = {k: run(d, x) for k, x in picks.items()}
-Qg = {k: run(g, x) for k, x in picks.items()}
 nse_b = {k: nse(q[ORD], obs[ORD]) for k, q in Qb.items()}
-nse_g = {k: nse(q[GORD], gobs[GORD]) for k, q in Qg.items()}
 for k, x in picks.items():
     print(k, {n: round(float(v), 3) for n, v in zip(names, x)},
-          f'NSE Blackwood {nse_b[k]:.3f}, General {nse_g[k]:.3f}')
+          f'NSE {nse_b[k]:.3f}')
 
 wy = (d.wy == WY).values
 dates = d.index[wy]
@@ -229,39 +220,6 @@ for r, (_, _, pos) in enumerate(ROWS, start=1):
                                   transform=fig.transFigure))
 save(fig, 'fig3')
 
-# ------------------------------------------------------------------ figure 3b (optional)
-# CAMELS max_water_content: soil depth x porosity, the water the soil holds when saturated
-soil = pd.read_csv('data/camels_soil.txt', sep=';', dtype={'gauge_id': str}).set_index('gauge_id')
-soil_max = 1000 * soil.loc[BLACKWOOD, 'max_water_content']  # mm
-X, score = mc['X'], mc['score']
-SHOW_ABOVE = 0.5  # below this, the plot would squash the top into a strip
-show = score > SHOW_ABOVE
-fig, axs = plt.subplots(1, 2, figsize=(W, 3.0), sharey=True)
-for a, n, xl in [(axs[0], 'TT', 'temperature below which precipitation is snow (°C)'),
-                 (axs[1], 'FC', 'soil water capacity (mm)')]:
-    a.scatter(X[show, col[n]], score[show], s=1.5, color=BAND, rasterized=True, lw=0, zorder=1)
-    a.scatter(Xg[:, col[n]], sg, s=4, color=INK2, lw=0, zorder=3)
-    a.set_xlim(*RANGES[n])  # the full range sampled
-    a.set_xlabel(xl)
-axs[0].set_ylabel('NSE')
-# The soil map's limit, with the good fits past it tinted: they fit just as well.
-fc_good = Xg[:, col['FC']]
-over = (fc_good > soil_max).mean()
-past = show & (X[:, col['FC']] > soil_max)
-axs[1].scatter(X[past, col['FC']], score[past], s=1.5, color='#ecd5ce', rasterized=True, lw=0, zorder=1)
-axs[1].scatter(fc_good[fc_good > soil_max], sg[fc_good > soil_max], s=4, color='#b5523b', lw=0, zorder=3)
-axs[1].axvline(soil_max, color='#b5523b', lw=1.2, zorder=2)  # behind the good fits (zorder 3)
-axs[1].text(soil_max + 8, SHOW_ABOVE + 0.008, f"water capacity\nlimit ({soil_max:.0f} mm)", color='#b5523b',
-            fontsize=8.5, va='bottom', zorder=4)
-fig.suptitle(f'NSE of {len(X):,} random parameter sets', x=0.012, ha='left',
-             fontsize=12, fontweight='bold')
-fig.text(0.012, -0.15, f'Dark points: the {good.sum():,} good fits (NSE above {THRESHOLD:.2f}). '
-         f'Sets below {SHOW_ABOVE} ({100 * (1 - show.mean()):.0f}% of all) are not shown.\n'
-         f'Water capacity limit: the most water the soil can hold. '
-         f'Red: the {100 * over:.0f}% of dark points above it.', color=MUTED, fontsize=9)
-fig.tight_layout()
-save(fig, 'fig3b', 'png')
-
 # ------------------------------------------------------------------ figure 3c
 # NSE over the plane through A and C: one axis is the straight line from A to C, which lies
 # close to the Hessian's sloppiest direction; the other is the Hessian's stiffest direction
@@ -338,39 +296,9 @@ fig.text(0.1, -0.1, 'Surface: NSE from running the model at each point. The A-to
 save(fig, 'fig3c', 'png')
 print(f'fig3c: eigenvalues {lam[-1]:.3g} (stiff) to {lam[0]:.3g} (sloppy)')
 
-# ------------------------------------------------------------------ figure 4
-# Train/test splits (calibrate.py). Each row is one fit: its NSE on the years it was trained
-# on (filled) and on the years it was tested on (open).
-def train_test(rows, title, note, name):
-    fig, s = plt.subplots(figsize=(W, 0.75 + 0.78 * len(rows)))
-    for row, (label, train, test) in enumerate(rows):
-        y_ = len(rows) - 1 - row
-        s.plot([test, train], [y_, y_], color=BAND, lw=3, solid_capstyle='butt', zorder=1)
-        s.plot(train, y_, marker='o', ms=9, color=INK, lw=0, zorder=2)
-        s.plot(test, y_, marker='o', ms=9, color=SURFACE, markeredgecolor=INK, markeredgewidth=1.8, lw=0,
-               zorder=2)
-        left, right = (test, train) if test < train else (train, test)
-        for v, dx, ha in [(right, 9, 'left'), (left, -9, 'right')]:  # a fixed gap in points from each dot
-            s.annotate(f'{v:.2f}', (v, y_), xytext=(dx, 0), textcoords='offset points', ha=ha, va='center',
-                       color=INK2, fontsize=9.5)
-        s.text((train + test) / 2, y_ + 0.12, f'{test - train:+.2f}'.replace('-', '−'), ha='center',
-               va='bottom', color=MUTED, fontsize=9)
-        if row == 0:  # label the two kinds of dot once, on the top row
-            for v, which in [(train, 'training years'), (test, 'test years')]:
-                s.text(v, y_ + 0.3, which, ha='center', va='bottom', color=INK, fontsize=9.5)
-        print(f'{name}: {label.replace(chr(10), " ")}: train {train:.3f}, test {test:.3f}')
-    s.set_yticks(range(len(rows))[::-1], [label for label, _, _ in rows])
-    s.set_ylim(-0.5, len(rows) - 0.25)
-    s.set_xlim(0.45, 0.72)
-    s.set_xlabel('NSE')
-    s.grid(axis='y', visible=False)
-    s.spines['left'].set_visible(False)
-    s.set_title(title)
-    s.annotate(note, (0, 0), xycoords='axes fraction', xytext=(0, -42), textcoords='offset points', va='top',
-               color=MUTED, fontsize=9)
-    save(fig, name)
-
-
+# ------------------------------------------------------------------ train vs test (no figure)
+# For the prose: the full model's NSE on the years it was trained on vs the years it was
+# tested on.
 def split_nse(stage, mask):
     p = calib[stage]['params']
     return nse(run(d, [p[n] for n in names])[mask], obs[mask])
@@ -391,13 +319,10 @@ def pooled(scheme):
 
 
 DROUGHT = drought_years(d)
-train_test([('5-fold cross-validation\n(5-year blocks)', *pooled('blocked')),
-            ('drought years\n(test set)', split_nse('4: + soil', ORD), split_nse('4: + soil', DROUGHT))],
-           'NSE on the training years vs. the test years',
-           'Full model, Blackwood Creek. Top row: 5-fold cross-validation over the 25 ordinary years, in blocks\n'
-           'of 5 consecutive years. Bottom row: trained on all 25 ordinary years, tested on the drought years\n'
-           '(1987–1992, 2012–2014), which are never used for training.',
-           'fig4')
+cv_train, cv_test = pooled('blocked')
+print(f'5-fold cross-validation (5-year blocks): train {cv_train:.3f}, test {cv_test:.3f}')
+print(f'drought years: trained on the 25 ordinary years {split_nse("4: + soil", ORD):.3f}, '
+      f'tested on the drought years {split_nse("4: + soil", DROUGHT):.3f}')
 # For the prose: the same model trained on the drought years themselves
 print(f'Trained on drought years: NSE {split_nse("drought", DROUGHT):.3f} on them')
 
@@ -483,7 +408,7 @@ save(fig, 'fig5b')
 
 # ------------------------------------------------------------------ figure 6
 # Physics model vs a transformer by years of training data (learning_curve.py). Same folds
-# as fig 4: 5-fold cross-validation in 5-year blocks for ordinary years; drought years are a
+# as crossval.py: 5-fold cross-validation in 5-year blocks for ordinary years; drought years are a
 # test set never used for training. The transformer's line is its 3-seed ensemble (the
 # average of three trained networks), which can beat every single seed; faint dots are the seeds.
 lc = json.load(open(f'data/learning_curve_{BLACKWOOD}/summary.json'))['results']
@@ -495,6 +420,7 @@ panels = [('nse', 'Ordinary years\n(cross-validation)', 'NSE'),
 fig, axs = plt.subplots(1, 3, figsize=(W, 2.9), gridspec_kw=dict(wspace=0.42))
 for a, (key, title, ylab) in zip(axs, panels):
     phys = [lc[str(n)]['physics'][key] for n in sizes]
+    wide = [lc[str(n)]['physics_wide'][key] for n in sizes]
     ens = [lc[str(n)]['transformer_ens'][key] for n in sizes]
     seeds = [[r[key] for r in lc[str(n)]['transformer_seeds']] for n in sizes]
     lo, hi = [min(v) for v in seeds], [max(v) for v in seeds]
@@ -503,28 +429,23 @@ for a, (key, title, ylab) in zip(axs, panels):
         a.plot([xi + 0.06] * len(v), v, color=ML, alpha=0.35, lw=0, marker='o', ms=4)
     a.plot(x + 0.06, ens, color=ML, lw=1.8, marker='o', ms=5, label='transformer')
     a.plot(x - 0.06, phys, color=MODEL, lw=1.8, marker='o', ms=5, label='physics model')
+    a.plot(x - 0.06, wide, color=MODEL, lw=1.4, ls=(0, (3, 2)), marker='o', ms=4, mfc=SURFACE,
+           label='physics model,\nleak range loosened')
     a.set_xticks(x, [str(n) for n in sizes])
     a.set_xlim(-0.4, len(sizes) - 0.6)
     a.set_xlabel('years of training data')
     a.set_ylabel(ylab)
     a.set_title(title, fontsize=10.5)
     a.grid(axis='x', visible=False)
-    print(f'fig6 {key}: physics {np.round(phys, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
+    print(f'fig6 {key}: physics {np.round(phys, 3)}, loosened {np.round(wide, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
 axs[2].set_ylim(bottom=-1)
-axs[0].legend(loc='upper left', fontsize=8.5)
+axs[2].legend(*axs[0].get_legend_handles_labels(), loc='center', bbox_to_anchor=(0.5, 0.36),
+              fontsize=8.5)  # the empty band between the two lines
 fig.suptitle('Physics model vs transformer, by years of training data', x=0.012, ha='left', fontsize=12,
              fontweight='bold', y=1.12)
 fig.text(0.012, -0.2, 'Blackwood Creek. Ordinary years: 5-fold cross-validation in blocks of 5 consecutive years. '
          'Drought:\n1987–1992 and 2012–2014, never used for training (mean over the 5 fits). '
          'Transformer: line = average of 3 trained\nnetworks, faint dots = each one alone. Negative predictions '
-         'are set to 0 before scoring.',
+         'are set to 0 before scoring. Leak range loosened: 0–20 mm/day instead of 0–3.',
          color=MUTED, fontsize=9)
 save(fig, 'fig6')
-
-# ------------------------------------------------------------------ temperature artifact (no figure)
-# For the prose: winter night temperatures at the Ward Creek SNOTEL station, and in the model's
-# own Daymet input, jump against the Tahoe City cooperative station around the 2004 sensor change.
-coop = pd.read_csv('data/coop_USC00048758.csv', parse_dates=['DATE']).set_index('DATE')
-for label, series in [('Ward Creek SNOTEL', snotel_tmin('848')), ('Daymet over Blackwood', d.tmin)]:
-    diff = (winter_mean(series) - winter_mean(coop.TMIN)).dropna()
-    print(f'{label} minus Tahoe City, Dec-Mar Tmin: step {diff.loc[2004:].mean() - diff.loc[:2003].mean():+.2f} °C at 2004')

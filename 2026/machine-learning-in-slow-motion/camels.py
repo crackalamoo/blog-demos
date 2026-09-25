@@ -1,11 +1,9 @@
 # Load one CAMELS basin: Daymet basin-mean forcing + USGS streamflow, daily.
-import json
 import sys
 import numpy as np
 import pandas as pd
 
 BLACKWOOD = '10336660'
-GENERAL = '10336645'
 
 # California's two big droughts inside the CAMELS record (water years, Oct-Sep)
 DROUGHT_WYS = list(range(1987, 1993)) + [2012, 2013, 2014]
@@ -68,20 +66,3 @@ def hargreaves(doy, lat_deg, tmin, tmax):
     tmean = (tmin + tmax) / 2
     return 0.0023 * ra_mm * (tmean + 17.8) * np.sqrt(np.maximum(tmax - tmin, 0))
 
-
-def snotel_tmin(sid):
-    """Daily minimum temperature (°C) at one SNOTEL station."""
-    e = next(e for e in json.load(open(f'data/snotel_{sid}_daily.json'))[0]['data']
-             if e['stationElement']['elementCode'] == 'TMIN')
-    s = pd.Series({v['date']: v.get('value') for v in e['values']}, dtype=float)
-    s.index = pd.to_datetime(s.index)
-    s = ((s - 32) * 5 / 9).where(lambda t: t.between(-40, 40))
-    return s.loc['1990-10-01':]  # the first year of temperature is mostly 32 °F fill values
-
-
-def winter_mean(s):
-    """Mean over December-March of each water year, skipping winters with under 100 days of data."""
-    s = s.dropna()
-    s = s[s.index.month.isin([12, 1, 2, 3])]
-    g = s.groupby(s.index.year + (s.index.month >= 10))
-    return g.mean().where(g.count() >= 100).reindex(range(1981, 2015))

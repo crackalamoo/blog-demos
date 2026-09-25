@@ -13,6 +13,8 @@
 # Weather covers the whole record for both: the physics model spins up from 1980 and the
 # LSTM's 365-day window reaches back before the training years. Observed flow is never an input.
 #
+# The physics model is also fit with the leak's range loosened (model.WIDE_LEAK), same years.
+#
 # Optionally also the transformer (learned.py's architecture, same inputs and split as the LSTM),
 # trained with batch 128 instead of HP's 256 to stay well under the memory limit on MPS.
 #
@@ -29,7 +31,7 @@ import threading
 import time
 import numpy as np
 from scipy.optimize import differential_evolution
-from model import STAGES, nse, log_nse
+from model import STAGES, WIDE_LEAK, nse, log_nse
 import learned
 from learned import d, obs, ORD, DRY, YEARS, SCHEMES, INPUTS, GAUGE, pos, late_ratio
 
@@ -104,8 +106,11 @@ def start_watchdog(period=0.5):
 
 
 # ------------------------------------------------------------------ fits
-def phys_path(k, n):
-    return f'{OUT}/physics_f{k}_n{n}.npz'
+PHYSICS = {'physics': STAGES[-1][3], 'physics_wide': WIDE_LEAK}  # name -> parameter ranges
+
+
+def phys_path(k, n, name='physics'):
+    return f'{OUT}/{name}_f{k}_n{n}.npz'
 
 
 def lstm_path(k, n, s):
@@ -116,12 +121,13 @@ def tf_path(k, n, s):
     return f'{OUT}/transformer_{INPUT_SET}_f{k}_n{n}_s{s}.npz'
 
 
-def fit_physics(k, n):
-    p = phys_path(k, n)
+def fit_physics(k, n, name='physics'):
+    p = phys_path(k, n, name)
     if os.path.exists(p):
         return None
     t = time.time()
-    _, fn, inputs, params = STAGES[-1]
+    _, fn, inputs, _ = STAGES[-1]
+    params = PHYSICS[name]
     years = subset(k, n)
     train = ORD & d.wy.isin(years).values
     forcing = [d[c].values for c in inputs]
@@ -197,12 +203,12 @@ def run_transformer(runs, device, limit_min=None):
 def run(seeds, device, sizes=SIZES):
     os.makedirs(OUT, exist_ok=True)
     jobs = [(k, n) for n in sizes for k in range(5)]
-    todo = [j for j in jobs if not os.path.exists(phys_path(*j))]
+    todo = [(k, n, name) for name in PHYSICS for k, n in jobs if not os.path.exists(phys_path(k, n, name))]
     print(f'[{elapsed():5.1f} min] {len(todo)} physics fits to run', flush=True)
-    for i, (k, n) in enumerate(todo, 1):
-        sec = fit_physics(k, n)
+    for i, (k, n, name) in enumerate(todo, 1):
+        sec = fit_physics(k, n, name)
         rss, mps = check_memory()
-        print(f'[{elapsed():5.1f} min] physics {i}/{len(todo)} fold {k} N={n}: {sec:.0f}s  '
+        print(f'[{elapsed():5.1f} min] {name} {i}/{len(todo)} fold {k} N={n}: {sec:.0f}s  '
               f'(mem {rss:.2f} GB)', flush=True)
 
     run_seeds, seed_minutes = seeds, []
@@ -248,6 +254,7 @@ def scores(get):
 
 def report(seeds):
     phys = {(k, n): np.load(phys_path(k, n)) for n in SIZES for k in range(5)}
+    wide = {(k, n): np.load(phys_path(k, n, 'physics_wide')) for n in SIZES for k in range(5)}
     lstm = {}
     for s in range(seeds):
         if all(os.path.exists(lstm_path(k, n, s)) for n in SIZES for k in range(5)):
@@ -262,7 +269,7 @@ def report(seeds):
         P = scores(lambda k: phys[k, n]['sim'])
         E = scores(lambda k: np.mean([lstm[k, n, s]['sim'] for s in S], 0))
         per = [scores(lambda k, s=s: lstm[k, n, s]['sim']) for s in S]
-        res[n] = dict(physics=P, lstm_ens=E, lstm_seeds=per)
+        res[n] = dict(physics=P, physics_wide=scores(lambda k: wide[k, n]['sim']), lstm_ens=E, lstm_seeds=per)
 
     def rng(n, key):
         v = np.array([x[key] for x in res[n]['lstm_seeds']])
@@ -278,7 +285,14 @@ def report(seeds):
             print(f'{label:32s}{n:4d} {p:9.3f} {e:9.3f}  {rng(n, key):>30s}  {p - e:+12.3f}')
         print()
 
-    print('per-fold held-out NSE (fold: physics / LSTM ens), and training years')
+    print(f'physics with the leak loosened (0-{WIDE_LEAK[4][2]} mm/day), vs the usual range:')
+    for key, label in rows:
+        print(f'  {label:32s}' + '  '.join(f'N={n} {res[n]["physics_wide"][key]:.3f} ({res[n]["physics"][key]:.3f})'
+                                           for n in SIZES[::-1]))
+    print('  fitted leak (mm/day) by N: ' + '; '.join(
+        f'{n}: {[round(float(wide[k, n]["x"][4]), 1) for k in range(5)]}' for n in SIZES[::-1]))
+
+    print('\nper-fold held-out NSE (fold: physics / LSTM ens), and training years')
     for n in SIZES[::-1]:
         for k in range(5):
             print(f'  N={n:2d} fold {k}: {res[n]["physics"]["heldout_folds"][k]:6.3f} / '
@@ -327,6 +341,7 @@ def report(seeds):
               f'{sorted({int(z["batch"]) for z in tf.values()})}) against physics and LSTM')
         print(f'{"":36s}' + ''.join(f'{h:>33s}' for _, h in rows))
         table = [('physics', res[n]['physics'], None),
+                 ('physics, leak loosened', res[n]['physics_wide'], None),
                  (f'LSTM ens ({len(S)} seeds) [seed range]', res[n]['lstm_ens'], res[n]['lstm_seeds']),
                  ('LSTM seed 0', res[n]['lstm_seeds'][0], None),
                  (f'transformer ens ({len(T)} seed{"s" * (len(T) > 1)})', res[n]['transformer_ens'],
