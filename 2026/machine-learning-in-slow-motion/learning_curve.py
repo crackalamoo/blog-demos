@@ -13,7 +13,7 @@
 # Weather covers the whole record for both: the physics model spins up from 1980 and the
 # LSTM's 365-day window reaches back before the training years. Observed flow is never an input.
 #
-# The physics model is also fit with the leak's range loosened (model.WIDE_LEAK), same years.
+# The physics model is also fit with the leak's limit removed (model.WIDE_LEAK), same years.
 #
 # Optionally also the transformer (learned.py's architecture, same inputs and split as the LSTM),
 # trained with batch 128 instead of HP's 256 to stay well under the memory limit on MPS.
@@ -284,7 +284,7 @@ def report(seeds):
             print(f'{label:32s}{n:4d} {p:9.3f} {e:9.3f}  {rng(n, key):>30s}  {p - e:+12.3f}')
         print()
 
-    print(f'physics with the leak loosened (0-{WIDE_LEAK[4][2]} mm/day), vs the usual range:')
+    print(f'physics with no leak limit (0-{WIDE_LEAK[4][2]} mm/day), vs the usual range:')
     for key, label in rows:
         print(f'  {label:32s}' + '  '.join(f'N={n} {res[n]["physics_wide"][key]:.3f} ({res[n]["physics"][key]:.3f})'
                                            for n in SIZES[::-1]))
@@ -340,7 +340,7 @@ def report(seeds):
               f'{sorted({int(z["batch"]) for z in tf.values()})}) against physics and LSTM')
         print(f'{"":36s}' + ''.join(f'{h:>33s}' for _, h in rows))
         table = [('physics', res[n]['physics'], None),
-                 ('physics, leak loosened', res[n]['physics_wide'], None),
+                 ('physics, no leak limit', res[n]['physics_wide'], None),
                  (f'LSTM ens ({len(S)} seeds) [seed range]', res[n]['lstm_ens'], res[n]['lstm_seeds']),
                  ('LSTM seed 0', res[n]['lstm_seeds'][0], None),
                  (f'transformer ens ({len(T)} seed{"s" * (len(T) > 1)})', res[n]['transformer_ens'],

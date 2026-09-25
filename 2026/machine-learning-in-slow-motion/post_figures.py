@@ -43,10 +43,11 @@ W = 7.5  # inches; saved at 200 dpi -> 1500 px, shown at ~750 px
 
 
 def save(fig, name, fmt='svg'):
-    """SVG for line and bar charts; PNG for the dense scatter and the 3D surface, which would
-    make large, slow SVGs. SVG text is drawn as outlines so it looks the same everywhere."""
-    fig.savefig(f'{OUT}/{name}.{fmt}', dpi=200, bbox_inches='tight', pad_inches=0.15,
-                metadata={'Date': None} if fmt == 'svg' else None)
+    """SVG for line and bar charts; JPEG for the 3D surface, which would make a large, slow SVG
+    (and doubles as the post's link-preview image). SVG text is drawn as outlines so it looks
+    the same everywhere."""
+    extra = dict(metadata={'Date': None}) if fmt == 'svg' else dict(pil_kwargs={'quality': 90})
+    fig.savefig(f'{OUT}/{name}.{fmt}', dpi=200, bbox_inches='tight', pad_inches=0.15, **extra)
     plt.close(fig)
 
 
@@ -298,7 +299,7 @@ fig.text(0.1, -0.1, 'Surface: NSE from running the model at each point. The A-to
          f'{angle:.0f}° of the Hessian\'s sloppiest\ndirection; the stiffest direction is in rescaled parameter '
          'units. Percentages: how much of each direction is each\nparameter (its squared component). On the floor: '
          'the same NSE seen from above. Black lines: where NSE is\n0.01 below A.', color=MUTED, fontsize=9)
-save(fig, 'loss-surface', 'png')
+save(fig, 'loss-surface', 'jpg')
 print(f'loss-surface: eigenvalues {lam[-1]:.3g} (stiff) to {lam[0]:.3g} (sloppy)')
 
 # ------------------------------------------------------------------ train vs test (no figure)
@@ -430,25 +431,25 @@ for a, (key, title, ylab) in zip(axs, panels):
     lo, hi = [min(v) for v in seeds], [max(v) for v in seeds]
     x = np.arange(len(sizes))
     for xi, v in zip(x, seeds):
-        a.plot([xi + 0.06] * len(v), v, color=ML, alpha=0.35, lw=0, marker='o', ms=4)
-    a.plot(x + 0.06, ens, color=ML, lw=1.8, marker='o', ms=5, label='transformer')
-    a.plot(x - 0.06, phys, color=MODEL, lw=1.8, marker='o', ms=5, label='physics model')
-    a.plot(x - 0.06, wide, color=MODEL, lw=1.4, ls=(0, (3, 2)), marker='o', ms=4, mfc=SURFACE,
-           label='physics model, leak range loosened')
+        a.plot([xi + 0.09] * len(v), v, color=ML, alpha=0.35, lw=0, marker='o', ms=4)  # beside the line's point
+    a.plot(x, ens, color=ML, lw=1.8, marker='o', ms=5, label='transformer')
+    a.plot(x, phys, color=MODEL, lw=1.8, marker='o', ms=5, label='physics model')
+    a.plot(x, wide, color=MODEL, lw=1.4, ls=(0, (3, 2)), marker='o', ms=4, mfc=SURFACE,
+           label='physics model, leak limit removed')
     a.set_xticks(x, [str(n) for n in sizes])
     a.set_xlim(-0.4, len(sizes) - 0.6)
     a.set_xlabel('years of training data')
     a.set_ylabel(ylab)
     a.set_title(title, fontsize=10.5)
     a.grid(axis='x', visible=False)
-    print(f'physics-vs-transformer {key}: physics {np.round(phys, 3)}, loosened {np.round(wide, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
+    print(f'physics-vs-transformer {key}: physics {np.round(phys, 3)}, no leak limit {np.round(wide, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
 fig.legend(*axs[0].get_legend_handles_labels(), loc='upper center', bbox_to_anchor=(0.5, -0.03), ncol=3,
            fontsize=9, handlelength=1.8, columnspacing=1.4)
 fig.suptitle('Physics model vs transformer, by years of training data', x=0.012, ha='left', fontsize=12,
              fontweight='bold', y=1.08)
-fig.text(0.012, -0.36, 'Blackwood Creek. Both models are fit to maximize NSE. Ordinary years: 5-fold cross-validation in '
+fig.text(0.012, -0.3, 'Blackwood Creek. Both models are fit to maximize NSE. Ordinary years: 5-fold cross-validation in '
          'blocks of 5\nconsecutive years. Drought: 1987–1992 and 2012–2014, never used for training (mean over the 5 fits). '
          'Transformer:\nline = average of 3 trained networks, faint dots = each one alone. Negative predictions are set to 0 '
-         'before scoring.\nLeak range loosened: 0–20 mm/day instead of 0–3.',
+         'before scoring.',
          color=MUTED, fontsize=9)
 save(fig, 'physics-vs-transformer')
