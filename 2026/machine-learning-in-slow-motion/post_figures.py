@@ -125,7 +125,7 @@ a2.plot(y.index, y.q, color=INK, lw=1.4)
 a2.set_ylabel('creek flow\n(mm/day)')
 a2.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1, 4, 7, 10]))
 a2.xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
-a0.set_title('Blackwood Creek: weather in, creek flow out')
+a0.set_title('Blackwood Creek: predict creek flow from weather')
 a2.text(0, -0.5, f'Water years {DATA_WYS[0]}–{DATA_WYS[1]} (Oct {DATA_WYS[0] - 1} – Sep {DATA_WYS[1]}).\n'
         'Precipitation and temperature are Daymet basin averages; flow is the USGS gauge.',
         transform=a2.transAxes, color=MUTED, fontsize=9)
@@ -151,6 +151,7 @@ for i, ((stage, *_), label, sim) in enumerate(zip(STAGES, LABELS, sims)):
     a.text(0, -0.3, f'Blackwood Creek, water year {WY}.\nNSE is scored on all ordinary (non-drought) years '
            '1981–2011; 1 is a perfect fit.', transform=a.transAxes, color=MUTED, fontsize=9)
     save(fig, f'fig2{"abcd"[i]}')
+
 
 # ------------------------------------------------------------------ figure 3
 # Rows in the order the post introduces them, with the post's symbols. Each row also gets a
@@ -376,8 +377,8 @@ def split_nse(stage, mask):
 
 
 # Cross-validation (crossval.py): each fold's fit is trained on 20 ordinary years and
-# tested on the other 5. For a scheme, the test score pools every year's prediction from
-# the fit that didn't see it; the training score is the mean over the five fits.
+# tested on the other 5. The test score pools the five folds' test predictions (each year is
+# a test year exactly once); the training score is the mean over the five fits.
 cv = [r for r in json.load(open(f'data/{BLACKWOOD}_crossval.json')) if r['stage'] == STAGES[-1][0]]
 
 
@@ -390,12 +391,12 @@ def pooled(scheme):
 
 
 DROUGHT = drought_years(d)
-train_test([('test years: 5-year blocks', *pooled('blocked')),
-            ('test years: drought years', split_nse('4: + soil', ORD), split_nse('4: + soil', DROUGHT))],
+train_test([('5-fold cross-validation\n(5-year blocks)', *pooled('blocked')),
+            ('drought years\n(test set)', split_nse('4: + soil', ORD), split_nse('4: + soil', DROUGHT))],
            'NSE on the training years vs. the test years',
-           'Full model, Blackwood Creek. No fit is trained on drought years. Top row: five fits, each trained on 20\n'
-           'of the 25 ordinary years and tested on the other 5 consecutive years, so every year is tested once.\n'
-           'Bottom row: the fit trained on all 25 ordinary years, tested on the drought years 1987–1992 and 2012–2014.',
+           'Full model, Blackwood Creek. Top row: 5-fold cross-validation over the 25 ordinary years, in blocks\n'
+           'of 5 consecutive years. Bottom row: trained on all 25 ordinary years, tested on the drought years\n'
+           '(1987–1992, 2012–2014), which are never used for training.',
            'fig4')
 # For the prose: the same model trained on the drought years themselves
 print(f'Trained on drought years: NSE {split_nse("drought", DROUGHT):.3f} on them')
@@ -479,6 +480,46 @@ e2.text(0, -0.32, f'Set A, the best fit (NSE {calib["4: + soil"]["nse"]:.2f}), o
         'Error share: squared errors, as NSE counts them. Typical error: median of |model − observed| / observed.',
         transform=e2.transAxes, color=MUTED, fontsize=9)
 save(fig, 'fig5b')
+
+# ------------------------------------------------------------------ figure 6
+# Physics model vs a transformer by years of training data (learning_curve.py). Same folds
+# as fig 4: 5-fold cross-validation in 5-year blocks for ordinary years; drought years are a
+# test set never used for training. The transformer's line is its 3-seed ensemble (the
+# average of three trained networks), which can beat every single seed; faint dots are the seeds.
+lc = json.load(open(f'data/learning_curve_{BLACKWOOD}/summary.json'))['results']
+sizes = sorted(int(n) for n in lc)
+ML = '#6a51a3'
+panels = [('nse', 'Ordinary years\n(cross-validation)', 'NSE'),
+          ('drought_mean', 'Drought years\n(test set)', 'NSE'),
+          ('neg_pct', 'Negative predicted\nflow', '% of test days')]
+fig, axs = plt.subplots(1, 3, figsize=(W, 2.9), gridspec_kw=dict(wspace=0.42))
+for a, (key, title, ylab) in zip(axs, panels):
+    phys = [lc[str(n)]['physics'][key] for n in sizes]
+    ens = [lc[str(n)]['transformer_ens'][key] for n in sizes]
+    seeds = [[r[key] for r in lc[str(n)]['transformer_seeds']] for n in sizes]
+    lo, hi = [min(v) for v in seeds], [max(v) for v in seeds]
+    x = np.arange(len(sizes))
+    for xi, v in zip(x, seeds):
+        a.plot([xi + 0.06] * len(v), v, color=ML, alpha=0.35, lw=0, marker='o', ms=4)
+    a.plot(x + 0.06, ens, color=ML, lw=1.8, marker='o', ms=5, label='transformer')
+    a.plot(x - 0.06, phys, color=MODEL, lw=1.8, marker='o', ms=5, label='physics model')
+    a.set_xticks(x, [str(n) for n in sizes])
+    a.set_xlim(-0.4, len(sizes) - 0.6)
+    a.set_xlabel('years of training data')
+    a.set_ylabel(ylab)
+    a.set_title(title, fontsize=10.5)
+    a.grid(axis='x', visible=False)
+    print(f'fig6 {key}: physics {np.round(phys, 3)}, transformer {np.round(ens, 3)} [{np.round(lo, 3)}..{np.round(hi, 3)}]')
+axs[2].set_ylim(bottom=-1)
+axs[0].legend(loc='upper left', fontsize=8.5)
+fig.suptitle('Physics model vs transformer, by years of training data', x=0.012, ha='left', fontsize=12,
+             fontweight='bold', y=1.12)
+fig.text(0.012, -0.2, 'Blackwood Creek. Ordinary years: 5-fold cross-validation in blocks of 5 consecutive years. '
+         'Drought:\n1987–1992 and 2012–2014, never used for training (mean over the 5 fits). '
+         'Transformer: line = average of 3 trained\nnetworks, faint dots = each one alone. Negative predictions '
+         'are set to 0 before scoring.',
+         color=MUTED, fontsize=9)
+save(fig, 'fig6')
 
 # ------------------------------------------------------------------ temperature artifact (no figure)
 # For the prose: winter night temperatures at the Ward Creek SNOTEL station, and in the model's

@@ -9,4 +9,5 @@ dependencies = [
     "matplotlib",
     "remotezip",
     "numba",
+    "torch>=2.14",
 ]
