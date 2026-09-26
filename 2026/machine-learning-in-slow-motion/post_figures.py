@@ -1,4 +1,4 @@
-# The figures that go in the post. Run after calibrate.py and crossval.py.
+# The figures that go in the post. Run after calibrate.py, crossval.py and learning_curve.py.
 # Every fit is trained on the 25 ordinary (non-drought) water years; held-out scores come
 # from cross-validation. Three parameter sets are followed through the figures: A, the
 # best fit, and B and C, which score almost as well but describe different basins.
@@ -14,17 +14,18 @@ from model import STAGES, full_model, groundwater_step, nse, to_unit
 
 OUT = 'figures'
 os.makedirs(OUT, exist_ok=True)
-# The water year shown in figures 2-5 (Oct 1999 - Sep 2000). An ordinary year in which
-# every stage and all three sets fit well, so the differences shown come from the model,
-# not from one odd year. NSE in the figures is over all ordinary years.
+# The water year shown in the model-step, near-equal-fits and late-summer-flow figures
+# (Oct 1999 - Sep 2000). An ordinary year in which every stage and all three sets fit well,
+# so the differences shown come from the model, not from one odd year. NSE in the figures
+# is over all ordinary years.
 WY = 2000
-# Figure 1 shows the raw data over three water years, including the one above.
+# blackwood-weather-and-flow shows the raw data over three water years, including the one above.
 DATA_WYS = (1999, 2001)
 
 INK, INK2, MUTED = '#0b0b0b', '#52514e', '#8a8984'
 GRID, BAND, SURFACE = '#e8e7e3', '#dcdbd6', '#ffffff'
 MODEL = '#e34948'
-SETS = {'A': MODEL, 'B': '#2a78d6', 'C': '#1baf7a'}  # A is the model of fig 2d
+SETS = {'A': MODEL, 'B': '#2a78d6', 'C': '#1baf7a'}  # A is the full model of model-step-3-full
 # Muted colors for the inputs, kept apart from the saturated model and A/B/C colors
 PRECIP, TEMP, TEMP_BAND = '#5b87b5', '#b7832f', '#f1e2c6'
 
@@ -43,9 +44,8 @@ W = 7.5  # inches; saved at 200 dpi -> 1500 px, shown at ~750 px
 
 
 def save(fig, name, fmt='svg'):
-    """SVG for line and bar charts; JPEG for the 3D surface, which would make a large, slow SVG
-    (and doubles as the post's link-preview image). SVG text is drawn as outlines so it looks
-    the same everywhere."""
+    """SVG for line and bar charts; JPEG for the 3D surface, which would make a large, slow SVG.
+    SVG text is drawn as outlines so it looks the same everywhere."""
     extra = dict(metadata={'Date': None}) if fmt == 'svg' else dict(pil_kwargs={'quality': 90})
     fig.savefig(f'{OUT}/{name}.{fmt}', dpi=200, bbox_inches='tight', pad_inches=0.15, **extra)
     plt.close(fig)
@@ -126,7 +126,7 @@ save(fig, 'blackwood-weather-and-flow')
 # ------------------------------------------------------------------ model steps
 # One figure per step the post takes, on the same axes, so each can sit next to its equation.
 # The post goes from snow straight to the full model; the two stores alone (calibrate.py's
-# stage 3) barely help, so they get no figure. Files keep their letters until renumbering.
+# stage 3) barely help, so they get no figure.
 SHOWN = [('1: bucket', 'One bucket', 'model-step-1-bucket'), ('2: + snow', 'Add snow', 'model-step-2-snow'),
          ('4: + soil', 'Add groundwater, soil and evaporation', 'model-step-3-full')]
 by_stage = {stage: (fn, inputs, params) for stage, fn, inputs, params in STAGES}
@@ -380,37 +380,6 @@ a0.legend(loc='upper center', bbox_to_anchor=(0.9, -0.14), ncol=4, fontsize=9, h
 fig.text(0.012, -0.17, f'Blackwood Creek, water year {WY}. NSE is over all ordinary years 1981–2011.',
          color=MUTED, fontsize=9)
 save(fig, 'late-summer-flow')
-
-# ------------------------------------------------------------------ error-by-month
-# Where the best fit's NSE error comes from, month by month, vs how wrong it is each month
-best = sims[-1]
-months = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # water-year order
-sq = (best - obs) ** 2
-share = [100 * sq[ORD & (d.index.month == mo)].sum() / sq[ORD].sum() for mo in months]
-rel = [100 * np.median(np.abs(best / obs - 1)[ORD & (d.index.month == mo)]) for mo in months]
-LATE = [8, 9]
-colors = [INK if mo in LATE else BAND for mo in months]
-names_m = [pd.Timestamp(2000, mo, 1).strftime('%b') for mo in months]
-fig, (e1, e2) = plt.subplots(2, 1, figsize=(W, 4.8), sharex=True, gridspec_kw=dict(hspace=0.45))
-e1.bar(names_m, share, color=colors, width=0.7)
-e1.axhline(100 / 12, color=MUTED, lw=1, ls='--')
-e1.text(11.45, 100 / 12 + 1, 'equal share', color=MUTED, fontsize=8.5, ha='right', va='bottom')
-e1.set_ylabel('% of total')
-for x_, (v, mo) in enumerate(zip(share, months)):
-    if mo in LATE:
-        e1.text(x_, v + 0.6, f'{v:.2f}%', ha='center', va='bottom', color=INK, fontsize=8.5)
-e1.set_title("Share of the score's error from each month")
-e2.bar(names_m, rel, color=colors, width=0.7)
-e2.set_ylabel('% of observed flow')
-e2.set_title('Typical daily error in each month')
-for ax in (e1, e2):
-    ax.grid(axis='x', visible=False)
-late_share = sum(v for v, mo in zip(share, months) if mo in LATE)
-e2.text(0, -0.32, f'Set A, the best fit (NSE {calib["4: + soil"]["nse"]:.2f}), ordinary years 1981–2011. '
-        f'August and September (dark): {late_share:.1f}% of the error.\n'
-        'Error share: squared errors, as NSE counts them. Typical error: median of |model − observed| / observed.',
-        transform=e2.transAxes, color=MUTED, fontsize=9)
-save(fig, 'error-by-month')
 
 # ------------------------------------------------------------------ physics-vs-transformer
 # Physics model vs a transformer by years of training data (learning_curve.py). Same folds
